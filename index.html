@@ -1,0 +1,74 @@
+<!doctype html>
+<!--
+  O tema escuro nasce aqui, no HTML estático, e não num efeito do React.
+  A regra de CSS já vale na primeira pintura: posto pelo JavaScript, o funil
+  aparecia branco por um instante antes de escurecer — um flash branco na cara
+  de quem abre o anúncio à noite.
+  src/main.tsx só mexe nisso para atender ?tema=claro.
+-->
+<html lang="pt-BR" data-tema="escuro">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Rezas Sagradas | Oração do Arcanjo Miguel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!--
+      AS FONTES NÃO SEGURAM MAIS A PRIMEIRA PINTURA.
+
+      Este mesmo <link> era um `rel="stylesheet"` comum, e stylesheet bloqueia a
+      renderização: o navegador não desenhava NADA — nem o título, nem o botão —
+      enquanto não resolvesse o DNS de dois domínios, fechasse o TLS e baixasse
+      26 kB de CSS. Num 4G ruim, que é a rede de boa parte de quem chega pelo
+      anúncio, isso é a tela branca inteira, com o clique já pago.
+
+      Medido em 17/08/2026: 26 kB de CSS e 25 arquivos de fonte (as 14 primeiras
+      somam 270 kB) — mais que o dobro de todo o JavaScript do site.
+
+      `media="print"` faz o navegador baixar sem bloquear; o `onload` devolve
+      para `all` assim que chega, e aí as fontes entram. A aparência FINAL é
+      idêntica — as mesmas cinco famílias, os mesmos pesos. O que muda é o
+      intervalo: em vez de branco, aparece o texto nas fontes de reserva já
+      declaradas em src/index.css (Georgia para as serifadas, a do sistema para
+      as sem serifa), e ele troca sozinho. O `display=swap` na URL já garantia
+      isso do lado do Google.
+
+      O <noscript> mantém o comportamento antigo para quem tem JavaScript
+      desligado — ali não há o que otimizar, e é melhor bloquear que ficar sem
+      fonte nenhuma.
+    -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600&display=swap">
+    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600&display=swap">
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Work+Sans:wght@400;500;600&display=swap">
+    </noscript>
+    <!--
+      Os scripts da Wistia NÃO ficam aqui de propósito.
+
+      Eram quatro tags neste <head>, e as quatro baixavam na tela 0 — 60 kB e
+      quatro conexões com um domínio de terceiro antes da primeira pergunta,
+      sendo que o primeiro vídeo só aparece na tela 11. Agora são injetados por
+      src/lib/wistia.ts assim que a pessoa sai do hero, com folga de seis
+      perguntas e 52 s de áudio até serem necessários.
+
+      O preconnect abaixo continua aqui porque é barato e adianta o aperto de
+      mão de TLS: quando o script for pedido, a conexão já está de pé.
+
+      As regras de :not(:defined) que vêm em seguida são o que torna o
+      adiamento invisível — elas desenham o quadro do próprio vídeo, borrado,
+      no lugar exato onde o player vai montar.
+    -->
+    <link rel="preconnect" href="https://fast.wistia.com">
+    <style>
+      wistia-player[media-id='a78m863q0a']:not(:defined) { background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/a78m863q0a/swatch'); display: block; filter: blur(5px); padding-top:177.78%; }
+      wistia-player[media-id='sc2zwew6dx']:not(:defined) { background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/sc2zwew6dx/swatch'); display: block; filter: blur(5px); padding-top:177.78%; }
+      wistia-player[media-id='31rfb4n9yd']:not(:defined) { background: center / contain no-repeat url('https://fast.wistia.com/embed/medias/31rfb4n9yd/swatch'); display: block; filter: blur(5px); padding-top:177.78%; }
+    </style>
+  </head>
+  <!-- A cor de fundo sai de src/index.css (var --color-fundo), para acompanhar o tema. -->
+  <body class="antialiased selection:bg-[#E5C158]/30">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

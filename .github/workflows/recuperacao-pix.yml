@@ -1,0 +1,66 @@
+# Lembrete de PIX gerado e não pago.
+#
+# Por que este relógio mora aqui, e não na Vercel: a conta é do plano Hobby,
+# onde o agendador aceita no máximo UMA execução por dia — e o deploy é recusado
+# se a expressão pedir mais. Uma passada diária encontraria todo mundo com a
+# cobrança já expirada e não recuperaria ninguém, porque a PixGo apaga a
+# cobrança poucas dezenas de minutos depois de criá-la.
+#
+# Se um dia a conta virar Pro, o certo é mover isto de volta para o vercel.json
+# e apagar este arquivo: um relógio só, no mesmo lugar do resto.
+#
+# ATENÇÃO: `on.schedule` só dispara a partir do branch PADRÃO do repositório.
+# Este arquivo precisa estar na main — numa branch qualquer ele fica mudo, e o
+# silêncio parece "não tem ninguém abandonando carrinho".
+
+name: Recuperação de PIX
+
+on:
+  schedule:
+    # De dez em dez minutos. O GitHub não promete pontualidade em horário de
+    # pico (o atraso costuma ser de alguns minutos), e tudo bem: a rota decide
+    # sozinha quem já está maduro para receber o lembrete e quem ainda não.
+    - cron: '*/10 * * * *'
+  # Para disparar à mão pela aba Actions, sem esperar o relógio.
+  workflow_dispatch:
+
+# Duas execuções ao mesmo tempo não causariam dano — quem já recebeu fica
+# marcado —, mas também não adiantam nada. Melhor deixar a anterior terminar.
+concurrency:
+  group: recuperacao-pix
+  cancel-in-progress: false
+
+jobs:
+  lembrar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Chamar a rota de recuperação
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+
+          resposta=$(curl -sS -m 45 -w '\n%{http_code}' \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            'https://rezassagradas.site/api/cron/recuperacao')
+
+          corpo=$(printf '%s' "$resposta" | sed '$d')
+          codigo=$(printf '%s' "$resposta" | tail -n1)
+
+          echo "HTTP $codigo"
+          echo "$corpo"
+
+          # 404 aqui não é rota errada: é o que a aplicação responde a quem não
+          # apresenta o segredo. Falhar alto, porque um segredo dessincronizado
+          # entre a Vercel e as Secrets deste repositório deixaria a recuperação
+          # desligada sem que ninguém percebesse.
+          if [ "$codigo" = "404" ]; then
+            echo "::error::A rota não reconheceu o CRON_SECRET. Confira se o segredo do repositório é o mesmo da Vercel e se houve deploy depois da troca."
+            exit 1
+          fi
+
+          if [ "$codigo" != "200" ]; then
+            echo "::error::A rota respondeu $codigo."
+            exit 1
+          fi

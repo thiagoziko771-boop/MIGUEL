@@ -1,0 +1,32 @@
+{
+  "_leia": [
+    "Teste do ângulo nº 1 apontado pelo quiz (14/08/2026): 'o dinheiro entra e",
+    "sai e nunca sobra' — 56% do público marca essa resposta e as 3 vendas",
+    "rastreadas na pergunta do dinheiro marcaram exatamente ela.",
+    "",
+    "A arte foi gerada no Nano Banana 2 (4:5), aprovada pelo dono em 14/08:",
+    "senhora com carteira, notas virando poeira dourada, Miguel ao alto.",
+    "",
+    "ESTRUTURA A PEDIDO DO DONO (14/08): campanha própria, um conjunto, um",
+    "anúncio, R$ 15/dia. Ele conhece o custo de fatiar verba (o erro do dia 12",
+    "está documentado no plano da estreia) e escolheu isolar o teste mesmo",
+    "assim — a decisão é dele e está registrada aqui.",
+    "",
+    "Sobe com:",
+    "  node scripts/gerenciar-anuncios.mjs subir-lote campanhas/teste-quiz-dinheiro.json"
+  ],
+
+  "campanha": "TESTE-QUIZ-DINHEIRO",
+  "reais": 15,
+  "idadeMin": 45,
+  "inicioEm": "2026-08-14T16:40:00-03:00",
+
+  "pecas": [
+    {
+      "nome": "A-DINHEIRO-QUE-SOME-4x5",
+      "arquivo": "criativos-teste-quiz/dinheiro-que-some-4x5.png",
+      "titulo": "O dinheiro entra... e some?",
+      "mensagem": "Você trabalha o mês inteiro... mas na hora de pagar as contas, o dinheiro já foi embora? 🕯️ Isso pode não ser só matemática. Milhares de pessoas estão ouvindo a mensagem do Arcanjo Miguel e relatando um alívio que não sabem explicar. Toque em Saiba mais e ouça a sua. 🙏"
+    }
+  ]
+}

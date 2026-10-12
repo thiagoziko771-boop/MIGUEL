@@ -1,0 +1,62 @@
+# Pausa anúncio que gastou além do limite sem nenhuma venda.
+#
+# O limite geral é R$ 28, e saiu dos números da própria conta: o ticket fica
+# entre R$ 47 e R$ 88, e os criativos que venderam converteram com R$ 16 a
+# R$ 35 gastos. Campanhas de teste têm limite próprio, menor, no mapa
+# LIMITE_POR_CAMPANHA do script.
+#
+# SÓ PAUSA, NUNCA REATIVA — e isso não é limitação, é desenho. Desligar o que
+# está sangrando pode ser mecânico; religar exige alguém olhando o criativo e o
+# contexto. O erro de pausar demais custa um anúncio parado até alguém ver; o de
+# religar sozinho custa dinheiro com ninguém olhando.
+#
+# De duas em duas horas [Claude 2026-08-12]. Antes eram duas passadas por dia,
+# o que bastava para um limite de R$ 28; com corte em R$ 15 num conjunto de
+# R$ 50/dia, doze horas de silêncio deixam a peça ruim passar muito do limite
+# antes de alguém olhar. O preço dessa frequência é atribuição: uma venda pode
+# levar horas para aparecer no insight, então existe a chance de pausar um
+# anúncio que acabou de vender. É o lado barato do erro — religar é um comando,
+# e o dinheiro gasto não volta.
+
+name: Zelar pelos anúncios
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: zelar-anuncios
+  cancel-in-progress: false
+
+jobs:
+  zelar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Aplicar a regra
+        env:
+          META_ADS_TOKEN: ${{ secrets.META_ADS_TOKEN }}
+          # A conta deixou de ser um número escrito no script quando a operação
+          # migrou de BM (14/08/2026). Sem esta variável o script recusa rodar —
+          # melhor parado que zelando pela conta errada, que foi exatamente o
+          # defeito: o zelador passou dois dias vigiando a conta antiga, parada,
+          # enquanto a campanha nova rodava sem a regra dos R$ 28.
+          META_CONTA_ID: ${{ secrets.META_CONTA_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${META_ADS_TOKEN}" ]; then
+            echo "::error::META_ADS_TOKEN não está nas Secrets do repositório."
+            exit 1
+          fi
+          if [ -z "${META_CONTA_ID}" ]; then
+            echo "::error::META_CONTA_ID não está nas Secrets do repositório."
+            exit 1
+          fi
+          node scripts/gerenciar-anuncios.mjs zelar --aplicar

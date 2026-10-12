@@ -1,0 +1,1246 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Painel | Rezas Sagradas</title>
+<link rel="stylesheet" href="/admin.css">
+<script>
+  // Aplicado antes da primeira pintura para a tela não piscar em branco.
+  (function () {
+    try {
+      var salvo = localStorage.getItem('painel.tema');
+      var escuro = salvo ? salvo === 'escuro' : matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.dataset.tema = escuro ? 'escuro' : 'claro';
+    } catch (e) {
+      document.documentElement.dataset.tema = 'claro';
+    }
+  })();
+</script>
+</head>
+<body>
+
+<!-- ------------------------------------------------------------- Login -- -->
+<section id="login">
+  <form class="cartao-login" id="formLogin">
+    <div class="cadeado" aria-hidden="true">&#128274;</div>
+    <h1>Painel do Rezas Sagradas</h1>
+    <p>Entre com a sua senha para ver os pedidos.</p>
+    <label class="oculto-visual" for="senha">Senha</label>
+    <input type="password" id="senha" autocomplete="current-password" required>
+    <button class="botao-principal" type="submit" id="botaoEntrar">Entrar</button>
+    <p class="erro-login" id="erroLogin" hidden></p>
+  </form>
+</section>
+
+<!-- ------------------------------------------------------------ Painel -- -->
+<div id="painel" hidden>
+
+  <header class="topbar">
+    <span class="marca">Rezas Sagradas</span>
+    <span class="selo">Admin</span>
+    <span class="espaco"></span>
+    <span class="atualizado" id="atualizado"></span>
+    <button class="botao-icone" id="botaoTema" aria-label="Trocar tema">Tema</button>
+    <button class="botao-icone" id="botaoRecarregar">Atualizar</button>
+    <button class="botao-icone" id="botaoSair">Sair</button>
+  </header>
+
+  <p class="aviso-modo" id="avisoModo" hidden></p>
+
+  <nav class="abas" role="tablist">
+    <button role="tab" aria-selected="false" data-aba="resumo">Resumo</button>
+    <button role="tab" aria-selected="true" data-aba="pedidos">Pedidos</button>
+    <button role="tab" aria-selected="false" data-aba="cobranca">Cobrar</button>
+    <button role="tab" aria-selected="false" data-aba="entregas">Entregas</button>
+    <button role="tab" aria-selected="false" data-aba="webhooks">Webhooks</button>
+    <button role="tab" aria-selected="false" data-aba="anuncios">Anúncios</button>
+    <button role="tab" aria-selected="false" data-aba="bms">BMs</button>
+    <button role="tab" aria-selected="false" data-aba="relatorios">Relatórios</button>
+    <button role="tab" aria-selected="false" data-aba="funil">Funil</button>
+    <button role="tab" aria-selected="false" data-aba="pagamentos">Pagamentos</button>
+    <button role="tab" aria-selected="false" data-aba="acessos">Acessos</button>
+    <button role="tab" aria-selected="false" data-aba="emails">E-mails</button>
+    <button role="tab" aria-selected="false" data-aba="boletos">Boletos</button>
+    <button role="tab" aria-selected="false" data-aba="crm">CRM</button>
+    <button role="tab" aria-selected="false" data-aba="tiktok">TikTok</button>
+  </nav>
+
+  <main>
+
+    <!-- ------------------------------------------------------- Resumo -- -->
+    <section id="abaResumo" role="tabpanel" hidden>
+      <div class="barra">
+        <div class="chips" id="chipsPeriodoResumo">
+          <button data-dias="1" aria-pressed="false">Hoje</button>
+          <button data-dias="7" aria-pressed="true">7 dias</button>
+          <button data-dias="30" aria-pressed="false">30 dias</button>
+          <button data-dias="90" aria-pressed="false">90 dias</button>
+        </div>
+        <span class="espaco"></span>
+        <button class="botao-icone" id="recarregarResumo">Atualizar</button>
+      </div>
+      <div class="barra">
+        <div class="chips" id="chipsBmResumo"></div>
+      </div>
+
+      <p class="aviso-modo" id="avisoCustos" hidden></p>
+
+      <div class="kpis" id="kpisResumo"></div>
+
+      <p class="rodape" id="frasesResumo"></p>
+
+      <div class="painel">
+        <h2>De onde veio o dinheiro</h2>
+        <div class="envolve-tabela">
+          <table class="tabela-anuncios">
+            <thead><tr><th>Fonte</th><th>Vendas</th><th>Faturamento</th><th>Fatia</th></tr></thead>
+            <tbody id="corpoFontes"></tbody>
+          </table>
+        </div>
+        <p class="rodape">
+          A fonte e o <code>utm_source</code> carimbado na entrada. <strong>Direto</strong>
+          e quem chegou sem carimbo nenhum &mdash; link no WhatsApp, digitou o endereco,
+          ou um anuncio cuja URL esqueceu os parametros.
+        </p>
+      </div>
+
+      <div class="painel">
+        <h2>Como pagaram</h2>
+        <div class="envolve-tabela">
+          <table class="tabela-anuncios">
+            <thead><tr><th>Forma</th><th>Vendas</th><th>Faturamento</th><th>Fatia</th></tr></thead>
+            <tbody id="corpoMetodos"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ------------------------------------------------- Custos ----- -->
+      <div class="painel">
+        <h2>Quanto custa vender</h2>
+        <p class="rodape">
+          Sem estes numeros, <strong>Lucro</strong> quer dizer apenas
+          <em>faturamento menos anuncio</em> &mdash; e sai maior do que a realidade,
+          sempre. Preencha uma vez; muda so quando voce troca de gateway ou de regime.
+        </p>
+
+        <div class="grade-credenciais">
+          <label for="custoGatewayPercentual">Taxa do gateway (%)</label>
+          <input type="text" id="custoGatewayPercentual" inputmode="decimal"
+                 placeholder="4,99" autocomplete="off">
+
+          <label for="custoGatewayFixo">Taxa fixa por transacao (R$)</label>
+          <input type="text" id="custoGatewayFixo" inputmode="decimal"
+                 placeholder="0,00" autocomplete="off">
+
+          <label for="custoImpostoVenda">Imposto sobre a venda (%)</label>
+          <input type="text" id="custoImpostoVenda" inputmode="decimal"
+                 placeholder="6" autocomplete="off">
+
+          <label for="custoImpostoMeta">Imposto do Meta Ads (%)</label>
+          <input type="text" id="custoImpostoMeta" inputmode="decimal"
+                 placeholder="7,25" autocomplete="off">
+
+          <label for="custoProduto">Custo do produto por venda (R$)</label>
+          <input type="text" id="custoProduto" inputmode="decimal"
+                 placeholder="0,00" autocomplete="off">
+        </div>
+
+        <p class="rodape">
+          <strong>Imposto do Meta Ads</strong> e o tributo que aparece na fatura da Meta
+          <strong>por fora</strong> do valor do leilao &mdash; o gasto que importamos da
+          API vem sem ele, entao sem este campo o anuncio parece mais barato do que foi.
+          <strong>Custo do produto</strong> costuma ser zero em produto digital.
+        </p>
+
+        <div class="acoes">
+          <button class="botao" id="salvarCustos">Salvar custos</button>
+          <span class="nota" id="avisoSalvarCustos"></span>
+        </div>
+        <p class="rodape" id="notaEquilibrio"></p>
+      </div>
+
+      <!-- ----------------------------------------------- Despesas ----- -->
+      <div class="painel">
+        <h2>Despesas alem do anuncio</h2>
+        <p class="rodape">
+          Ferramenta, editor, copy, dominio. Marque <strong>mensal</strong> para
+          assinatura: ela e rateada por dia, senao os R$ 300 do mes inteiro
+          apareceriam dentro de uma janela de um dia e diriam que a terca deu prejuizo.
+        </p>
+        <div class="envolve-tabela">
+          <table class="tabela-anuncios">
+            <thead>
+              <tr><th>Dia</th><th>Descricao</th><th>Valor</th><th>Mensal</th><th></th></tr>
+            </thead>
+            <tbody id="corpoDespesas"></tbody>
+          </table>
+        </div>
+        <div class="acoes">
+          <button class="botao-secundario" id="novaDespesa">Adicionar linha</button>
+          <button class="botao" id="salvarDespesas">Salvar despesas</button>
+          <span class="nota" id="avisoSalvarDespesas"></span>
+        </div>
+      </div>
+
+      <div class="painel" style="margin-top:18px">
+        <h2>Exportar vendas para o Meta</h2>
+        <p class="rodape" style="margin:0 0 12px">
+          Gera um arquivo com as vendas <strong>confirmadas</strong> para voce subir
+          a mao no Gerenciador de Eventos. <strong>Nada e enviado daqui</strong> —
+          o site nao fala com o Meta. Os dados do cliente saem embaralhados
+          (SHA-256), como o Meta exige, e nao ficam guardados em lugar nenhum.
+        </p>
+
+        <div class="grade-credenciais">
+          <label for="expDesde">De (dia)</label>
+          <input type="date" id="expDesde">
+          <label for="expAte">Ate (dia)</label>
+          <input type="date" id="expAte">
+        </div>
+
+        <p class="rodape" style="margin:10px 0 0">
+          <label><input type="checkbox" id="expNovas" checked> Somente vendas que eu ainda nao subi</label>
+        </p>
+
+        <div class="acoes" style="margin-top:12px">
+          <button class="botao-secundario" id="expPreview">Ver o que sairia</button>
+          <button class="botao" id="expBaixar">Baixar arquivo</button>
+        </div>
+
+        <p class="nota" id="expResultado"></p>
+
+        <!--
+          O bloco de confirmacao so aparece DEPOIS do download, e e o passo que
+          separa "baixei" de "subi". Enquanto ele nao for clicado, as vendas
+          continuam na fila de nao exportadas — repetir upload o Meta deduplica
+          pelo order_id; perder um upload ninguem percebe.
+        -->
+        <div id="expConfirmacao" hidden style="margin-top:14px;padding-top:14px;border-top:1px solid var(--borda)">
+          <p class="rodape" style="margin:0 0 10px">
+            Subiu o arquivo no Gerenciador de Eventos e viu o carregamento concluir?
+            Confirme aqui — so entao estas vendas saem da fila.
+          </p>
+          <div class="acoes">
+            <button class="botao" id="expConfirmar">Confirmei o upload no Meta</button>
+            <span class="nota" id="expLote"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------ Pedidos -- -->
+    <section id="abaPedidos" role="tabpanel">
+      <div class="barra-periodo">
+        <div class="chips" id="chipsPeriodo">
+          <button data-dias="0" aria-pressed="true">Hoje</button>
+          <button data-dias="7" aria-pressed="false">7 dias</button>
+          <button data-dias="30" aria-pressed="false">30 dias</button>
+          <button data-dias="90" aria-pressed="false">90 dias</button>
+          <button data-dias="-1" aria-pressed="false">Tudo</button>
+        </div>
+        <span class="espaco"></span>
+        <span class="atualizado" id="consultas"></span>
+        <button class="botao-icone" id="botaoVerificar">Verificar pendentes</button>
+      </div>
+
+      <div id="areaPedidos">
+        <p class="leitura" id="leitura"></p>
+
+        <div class="kpis" id="kpis"></div>
+        <p class="adicionais" id="adicionais"></p>
+
+        <section class="cobranca" id="cobranca" hidden></section>
+
+        <button class="aviso-acionavel" id="avisoEntrega" hidden></button>
+
+        <div class="widgets" id="widgets"></div>
+
+        <div id="areaTabela">
+          <div class="barra-tabela">
+            <select id="filtroStatus" aria-label="Filtrar por situação">
+              <option value="todos">Todos</option>
+              <option value="pagos">Só pagos</option>
+              <option value="pendentes">Só aguardando</option>
+              <option value="analise">Em análise (MED)</option>
+              <option value="encerrados">Expirados e cancelados</option>
+            </select>
+            <select id="filtroEmail" aria-label="Filtrar pelo e-mail">
+              <option value="todos">E-mail: todos</option>
+              <option value="nao_enviado">Não avisados</option>
+              <option value="enviado">Sem sinal de entrega</option>
+              <option value="entregue">Entregues, não leram</option>
+              <option value="aberto">Leram</option>
+              <option value="clicou">Leram e voltaram</option>
+            </select>
+            <select id="campoBusca" aria-label="Onde buscar">
+              <option value="tudo">Buscar em tudo</option>
+              <option value="cpf">CPF</option>
+              <option value="email">E-mail</option>
+              <option value="transacao">Transação</option>
+            </select>
+            <input type="search" id="busca" placeholder="Nome, e-mail, CPF, ID ou transação" aria-label="Buscar pedido">
+            <button class="botao-icone" id="botaoLimpar">Limpar</button>
+            <span class="espaco" style="flex:1"></span>
+            <label style="font-size:.8rem;color:var(--texto-2);display:flex;gap:6px;align-items:center">
+              <input type="checkbox" id="verFilhos" style="width:auto">
+              Mostrar upsell e downsell como linhas
+            </label>
+          </div>
+
+          <div class="envolve-tabela">
+            <table>
+              <thead>
+                <tr>
+                  <th data-ordem="data">Data</th>
+                  <th data-ordem="cliente">Cliente</th>
+                  <th data-ordem="cpf">CPF</th>
+                  <th data-ordem="oferta">Oferta</th>
+                  <th data-ordem="valor">Valor</th>
+                  <th data-ordem="origem">Origem</th>
+                  <th data-ordem="email">E-mail</th>
+                  <th data-ordem="status">Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="corpoTabela"></tbody>
+            </table>
+            <div class="rodape-tabela">
+              <span id="contagem"></span>
+              <span>Atualização automática a cada 30 segundos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!--
+      Cobrar: a fila de quem gerou o PIX e não concluiu.
+
+      Existe como aba própria, e não como um cartão no meio dos pedidos, porque
+      é trabalho diário e tem ordem: primeiro quem já deu sinal de vida (leu a
+      mensagem, voltou ao site), depois o resto. Cobrar na ordem errada gasta o
+      número de WhatsApp com quem tinha menos chance.
+    -->
+    <section id="abaCobranca" role="tabpanel" hidden>
+      <!--
+        Chegando agora: a tela de plantão.
+
+        É onde o dono fica enquanto o anúncio roda. Cada pedido aparece no
+        instante em que nasce, com o relógio correndo: passados cinco minutos
+        sem contribuição, a linha acende e o botão de chamar fica à mão. Quem
+        contribuiu troca de botão — vira a entrega da Oração pelo WhatsApp, que
+        é a promessa escrita na página de quem pagou.
+      -->
+      <!--
+        O convite do círculo diário.
+
+        Vive aqui, e não no código, porque o link do grupo muda quando o grupo
+        enche (o WhatsApp limita) e trocar isso não pode depender de publicar
+        uma versão nova do site.
+      -->
+      <div class="painel">
+        <h2>Círculo de orações</h2>
+        <p class="rodape">
+          Cole o convite do grupo (<code>https://chat.whatsapp.com/…</code>). Ele entra na mensagem de
+          entrega de quem contribuiu — é o que faz a pessoa continuar alcançável sem custo de anúncio.
+          Deixe vazio para não convidar ninguém.
+        </p>
+        <div class="linha-copiar" style="margin-top:0">
+          <input type="url" id="linkGrupo" class="campo-planilha"
+                 placeholder="https://chat.whatsapp.com/..." aria-label="Convite do grupo">
+          <button class="botao-icone" id="salvarGrupo">Salvar</button>
+        </div>
+        <p class="rodape" id="notaGrupo"></p>
+      </div>
+
+      <div class="painel">
+        <h2>Chegando agora</h2>
+        <p class="rodape" id="avisoAgora"></p>
+        <div id="listaAgora"></div>
+      </div>
+
+      <div class="kpis kpis-anuncios" id="kpisCobranca"></div>
+      <div class="painel">
+        <h2>Fila acumulada</h2>
+        <p class="rodape" id="avisoCobranca"></p>
+        <div id="filaCobranca"></div>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------- Entregas -- -->
+    <section id="abaEntregas" role="tabpanel" hidden>
+      <p class="leitura" id="resumoEntregas"></p>
+      <div id="listaEntregas" class="grade-entregas"></div>
+
+      <section class="painel" style="margin-top:18px">
+        <h2>Histórico de alterações</h2>
+        <div id="historicoEntregas"></div>
+      </section>
+    </section>
+
+    <!-- ----------------------------------------------------- Webhooks -- -->
+    <section id="abaWebhooks" role="tabpanel" hidden>
+      <div class="barra-tabela">
+        <select id="filtroWebhook" aria-label="Filtrar webhooks">
+          <option value="todos">Todos</option>
+          <option value="processado">Processados</option>
+          <option value="ignorado">Ignorados</option>
+          <option value="erro">Com erro</option>
+        </select>
+        <span style="flex:1"></span>
+        <button class="botao-icone" id="recarregarWebhooks">Atualizar</button>
+      </div>
+      <p class="leitura" id="resumoWebhooks"></p>
+      <div class="envolve-tabela">
+        <table>
+          <thead>
+            <tr>
+              <th>Quando</th>
+              <th>Evento</th>
+              <th>Cobrança</th>
+              <th>Pedido</th>
+              <th>Informado</th>
+              <th>Confirmado</th>
+              <th>Resultado</th>
+            </tr>
+          </thead>
+          <tbody id="corpoWebhooks"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------- Anúncios -- -->
+    <section id="abaAnuncios" role="tabpanel" hidden>
+      <div class="barra-tabela">
+        <div class="chips" id="chipsSecaoAnuncios">
+          <button data-secao="desempenho" aria-pressed="true">Desempenho</button>
+          <button data-secao="config" aria-pressed="false">Configuração</button>
+        </div>
+        <span style="flex:1"></span>
+        <!--
+          "Ontem" é o único que não é "últimos N dias": é um dia fechado, que
+          não muda mais. Por isso o valor carrega o fim da janela junto —
+          1|ontem, e não um número solto.
+        -->
+        <select id="periodoAnuncios" aria-label="Período dos anúncios">
+          <option value="1|hoje">Hoje</option>
+          <option value="1|ontem">Ontem</option>
+          <option value="7|hoje" selected>7 dias</option>
+          <option value="15|hoje">15 dias</option>
+          <option value="30|hoje">30 dias</option>
+          <option value="90|hoje">90 dias</option>
+        </select>
+        <select id="filtroRoas" aria-label="Filtrar por retorno">
+          <option value="" selected>Todo retorno</option>
+          <option value="acima">Só acima da meta</option>
+          <option value="abaixo">Só abaixo da meta</option>
+          <option value="sem">Só sem venda</option>
+        </select>
+        <button class="botao-icone" id="recarregarAnuncios">Atualizar</button>
+      </div>
+
+      <!-- ------------------------------------------ Desempenho -- -->
+      <div id="secaoDesempenho">
+        <p class="trilha-anuncios" id="trilhaAnuncios" hidden></p>
+        <div class="kpis kpis-anuncios" id="kpisAnuncios"></div>
+
+        <p class="leitura" id="resumoAnuncios"></p>
+
+        <div class="barra-tabela">
+          <div class="chips" id="chipsAnuncios">
+            <button data-agrupamento="campanha" aria-pressed="true">Por campanha</button>
+            <button data-agrupamento="conjunto" aria-pressed="false">Por conjunto</button>
+            <button data-agrupamento="anuncio" aria-pressed="false">Por anúncio</button>
+          </div>
+          <span style="flex:1"></span>
+          <!--
+            Seletor de BM. Fica ANTES do agrupamento de propósito: a BM é o
+            recorte mais grosso — escolher a conta e depois olhar campanha é a
+            ordem em que se pensa quando se roda cinco gerenciadores.
+          -->
+          <div class="chips" id="chipsBm"></div>
+
+          <div class="chips" id="chipsColunas">
+            <button data-colunas="resultado" aria-pressed="true">Resultado</button>
+            <button data-colunas="trafego" aria-pressed="false">Tráfego</button>
+            <button data-colunas="funil" aria-pressed="false">Funil</button>
+          </div>
+        </div>
+
+        <div class="envolve-tabela">
+          <table class="tabela-anuncios">
+            <thead><tr id="cabecalhoAnuncios"></tr></thead>
+            <tbody id="corpoAnuncios"></tbody>
+            <tfoot><tr id="rodapeAnuncios"></tr></tfoot>
+          </table>
+        </div>
+
+        <p class="rodape" id="legendaAnuncios"></p>
+      </div>
+
+      <!-- ----------------------------------------- Configuração -- -->
+      <div id="secaoConfigAnuncios" hidden>
+
+      <section class="painel">
+        <h2>Meta de retorno</h2>
+        <p class="rodape" style="margin:0 0 12px">
+          A partir de quantas vezes o dinheiro de volta um anúncio é considerado
+          bom. É essa régua que pinta o ROAS de verde, amarelo ou vermelho na
+          tabela. <strong>1x é empatar</strong> — e empatar ainda dá prejuízo,
+          porque sobra a taxa do PIX e o seu tempo.
+        </p>
+        <div class="linha-copiar" style="margin-top:0">
+          <input type="text" id="campoMetaRoas" class="campo-meta-roas"
+                 inputmode="decimal" placeholder="2" aria-label="Meta de retorno">
+          <span class="secundario">vezes o investido</span>
+          <button class="botao-icone" id="salvarMetaRoas">Salvar</button>
+        </div>
+        <p class="rodape" id="statusMetaRoas"></p>
+      </section>
+
+      <section class="painel" style="margin-top:18px">
+        <h2>Credenciais do Meta</h2>
+        <p class="rodape" style="margin:0 0 12px">
+          É o que liga o rastreamento. Os dois números ficam no
+          <strong>Gerenciador de Eventos</strong> → seu conjunto de dados →
+          <em>Configurações</em>. Salvar aqui vale na hora, sem publicar o site
+          de novo.
+        </p>
+
+        <p class="aviso-credencial" id="estadoCredenciais"></p>
+
+        <div class="grade-credenciais">
+          <label for="metaPixelId">ID do Pixel (conjunto de dados)</label>
+          <input type="text" id="metaPixelId" inputmode="numeric"
+                 placeholder="1234567890123456" autocomplete="off">
+
+          <label for="metaToken">Token da API de Conversões</label>
+          <input type="password" id="metaToken" autocomplete="off"
+                 placeholder="deixe em branco para manter o token atual">
+
+          <label for="metaTestCode">Código de teste (opcional)</label>
+          <input type="text" id="metaTestCode" placeholder="TEST12345" autocomplete="off">
+        </div>
+
+        <label class="linha-interruptor">
+          <input type="checkbox" id="metaLigado" checked>
+          <span>Rastreamento ligado</span>
+        </label>
+
+        <div class="linha-copiar">
+          <button class="botao-icone" id="salvarCredenciais">Salvar</button>
+          <button class="botao-icone" id="testarCredenciais">Testar conexão</button>
+        </div>
+
+        <p class="rodape" id="statusCredenciais"></p>
+
+        <details class="detalhe-exemplo">
+          <summary>Cuidados</summary>
+          <p class="rodape">
+            O token é <strong>senha da sua conta de anúncio</strong>. Ele é
+            guardado cifrado e nunca volta inteiro para esta tela — por isso o
+            campo aparece vazio mesmo quando há um token salvo. Deixar em branco
+            mantém o que já está lá; para remover, escreva
+            <code>apagar</code>.
+          </p>
+          <p class="rodape">
+            O <strong>código de teste</strong> manda os eventos para a aba
+            "Testar eventos" e eles <strong>não contam como conversão real</strong>.
+            Apague depois de conferir, senão você anuncia achando que está medindo.
+          </p>
+          <p class="rodape">
+            "Testar conexão" fala com o Meta sem registrar evento nenhum — não
+            suja o histórico da sua conta.
+          </p>
+        </details>
+      </section>
+
+      <section class="painel" style="margin-top:18px">
+        <h2>Investimento automático (direto do Meta)</h2>
+        <p class="rodape" style="margin:0 0 12px">
+          Liga o painel na sua conta de anúncios e traz o gasto sozinho, todo dia
+          de madrugada — por campanha, conjunto e anúncio. É o que transforma a
+          tabela de "quanto entrou" em "quanto sobrou".
+        </p>
+
+        <div class="linha-copiar" style="margin-top:0">
+          <input type="text" id="contaAnuncios" class="campo-planilha"
+                 placeholder="act_1234567890 (número da conta de anúncios)"
+                 aria-label="Conta de anúncios do Meta">
+        </div>
+        <div class="linha-copiar">
+          <input type="password" id="tokenAnuncios" class="campo-planilha"
+                 placeholder="Token com permissão ads_read"
+                 autocomplete="new-password"
+                 aria-label="Token de leitura dos anúncios">
+          <button class="botao-icone" id="salvarAnuncios">Salvar</button>
+          <button class="botao-icone" id="testarAnuncios">Testar</button>
+          <button class="botao-icone" id="importarAnuncios">Importar agora</button>
+        </div>
+
+        <p class="rodape" id="statusAnuncios"></p>
+
+        <details style="margin-top:10px">
+          <summary class="rodape" style="cursor:pointer">Onde eu acho esses dois?</summary>
+          <p class="rodape" style="margin:8px 0 0">
+            <strong>A conta:</strong> no Gerenciador de Anúncios, no alto da tela,
+            ao lado do nome da conta — é o número que aparece como
+            <em>act_1234567890</em>. Pode colar com ou sem o "act_".
+          </p>
+          <p class="rodape" style="margin:8px 0 0">
+            <strong>O token:</strong> no <em>business.facebook.com</em> →
+            Configurações do Business → Usuários do sistema → Adicionar. Dê a ele
+            acesso à conta de anúncios, clique em Gerar novo token, escolha o seu
+            app e marque a permissão <strong>ads_read</strong>. O token de um
+            usuário do sistema não expira, ao contrário do token comum.
+          </p>
+          <p class="rodape" style="margin:8px 0 0">
+            <strong>Não é o mesmo token da API de Conversões</strong>, ali de
+            cima. Aquele tem permissão de mandar evento; este, de ler o gasto.
+            Trocar um pelo outro dá erro de permissão.
+          </p>
+          <p class="rodape" style="margin:8px 0 0">
+            O token é guardado cifrado e nunca volta para esta tela, nem para
+            você. Para trocar, cole outro por cima; para desligar, salve com o
+            campo vazio.
+          </p>
+        </details>
+      </section>
+
+      <section class="painel" style="margin-top:18px">
+        <h2>Investimento automático (planilha)</h2>
+        <p class="rodape" style="margin:0 0 12px">
+          Se você usa Stract, Supermetrics ou parecido para jogar o gasto dos
+          anúncios numa Google Sheet, cole aqui o endereço dela publicado em CSV
+          (<em>Arquivo → Compartilhar → Publicar na web → CSV</em>). A coluna
+          Investido passa a se preencher sozinha.
+        </p>
+        <p class="rodape" style="margin:0 0 12px">
+          Se a planilha também trouxer <strong>impressões</strong> e
+          <strong>cliques no link</strong>, a aba Tráfego ganha CTR, CPC e CPM —
+          que são o único jeito de saber se o problema está no anúncio (ninguém
+          clica) ou na página (clicam e não compram). São opcionais: sem elas o
+          resto continua funcionando igual.
+        </p>
+
+        <div class="linha-copiar" style="margin-top:0">
+          <input type="url" id="urlPlanilha" class="campo-planilha"
+                 placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"
+                 aria-label="Endereço da planilha em CSV">
+          <button class="botao-icone" id="salvarPlanilha">Salvar</button>
+          <button class="botao-icone" id="importarPlanilha">Importar agora</button>
+        </div>
+
+        <p class="rodape" id="statusPlanilha"></p>
+      </section>
+
+      <section class="painel" style="margin-top:18px">
+        <h2>Parâmetros para colar no anúncio</h2>
+        <p class="rodape" style="margin:0 0 12px">
+          Cole no campo <strong>Parâmetros de URL</strong>, no nível do anúncio.
+          É a mesma linha para todos os anúncios: quem preenche os valores é a
+          própria plataforma, no clique.
+        </p>
+
+        <div class="chips" id="chipsPlataforma" style="margin-bottom:10px">
+          <button data-plataforma="meta" aria-pressed="true">Facebook / Instagram</button>
+          <button data-plataforma="google" aria-pressed="false">Google Ads</button>
+        </div>
+
+        <div class="chips" id="chipsFormato" style="margin-bottom:12px">
+          <button data-formato="completo" aria-pressed="true">Completo (recomendado)</button>
+          <button data-formato="empacotado" aria-pressed="false">Compatível com UTMify</button>
+        </div>
+
+        <textarea id="saidaParametros" class="saida-parametros" readonly rows="4"
+                  aria-label="Parâmetros de URL gerados"></textarea>
+
+        <div class="linha-copiar">
+          <button class="botao-icone" id="copiarParametros">Copiar</button>
+          <span class="secundario" id="avisoParametros"></span>
+        </div>
+
+        <p class="rodape" id="explicacaoParametros"></p>
+
+        <details class="detalhe-exemplo">
+          <summary>Como chega um clique com isso</summary>
+          <code id="exemploClique"></code>
+          <p class="rodape">
+            O campo <strong>URL do site</strong> continua limpo, só com o endereço.
+            Nome de campanha, conjunto e anúncio sem espaço e sem acento — eles
+            vão parar dentro da URL.
+          </p>
+        </details>
+      </section>
+
+      <section class="painel" style="margin-top:18px">
+        <h2>Envio para o Facebook</h2>
+        <div id="painelMeta"></div>
+      </section>
+
+      </div><!-- fim de secaoConfigAnuncios -->
+    </section>
+
+    <!-- ------------------------------------------------- Abas futuras -- -->
+    <section id="abaRelatorios" role="tabpanel" hidden>
+      <div class="barra-periodo">
+        <span class="atualizado" id="resumoRelatorios"></span>
+        <span class="espaco"></span>
+        <select id="periodoRelatorios" aria-label="Quantos dias do fechamento">
+          <option value="7">7 dias</option>
+          <option value="14" selected>14 dias</option>
+          <option value="30">30 dias</option>
+          <option value="60">60 dias</option>
+        </select>
+        <button class="botao-icone" id="recarregarRelatorios">Atualizar</button>
+      </div>
+
+      <!-- O dia em foco: hoje por padrão; clicar numa linha da tabela troca. -->
+      <div class="painel">
+        <div class="barra-periodo" style="margin-bottom:8px">
+          <h2 id="tituloFechamento" style="margin:0">Fechamento de hoje</h2>
+          <span class="espaco"></span>
+          <button class="botao-icone" id="copiarFechamento">Copiar resumo</button>
+        </div>
+        <div class="kpis kpis-anuncios" id="kpisRelatorios"></div>
+        <p class="rodape" id="legendaRelatorios"></p>
+      </div>
+
+      <div class="painel">
+        <h2>Dia a dia</h2>
+        <div class="tabela-rolavel">
+          <table class="tabela-anuncios" id="tabelaRelatorios">
+            <thead>
+              <tr>
+                <th>Dia</th>
+                <th class="num">Investido</th>
+                <th class="num">Visitas</th>
+                <th class="num">Quiz</th>
+                <th class="num">VSL</th>
+                <th class="num">Checkout</th>
+                <th class="num">PIX</th>
+                <th class="num">Vendas</th>
+                <th class="num">Receita</th>
+                <th class="num">Lucro</th>
+                <th class="num">ROAS</th>
+                <th class="num">CPA</th>
+                <th class="num">Visita→PIX</th>
+                <th class="num">PIX→pago</th>
+              </tr>
+            </thead>
+            <tbody id="corpoRelatorios"></tbody>
+            <tfoot id="rodapeRelatorios"></tfoot>
+          </table>
+        </div>
+        <p class="vazio" id="vazioRelatorios" hidden>Nenhum dado no período.</p>
+        <p class="rodape">Dia-calendário de São Paulo. Venda e PIX contam no dia em que o pedido foi criado — o mesmo critério da aba Anúncios. Investido vem do Gerenciador (nível campanha); "—" significa que nenhum gasto foi registrado naquele dia, não que foi zero. Clique numa linha para ver o fechamento daquele dia.</p>
+      </div>
+    </section>
+    <!-- --------------------------------------------------------- Funil -- -->
+    <section id="abaFunil" role="tabpanel" hidden>
+      <div class="barra-periodo">
+        <span class="atualizado" id="resumoFunil"></span>
+        <span class="espaco"></span>
+        <select id="periodoFunil" aria-label="Período do funil">
+          <option value="1|hoje">Hoje</option>
+          <option value="1|ontem">Ontem</option>
+          <option value="7|hoje" selected>7 dias</option>
+          <option value="15|hoje">15 dias</option>
+          <option value="30|hoje">30 dias</option>
+          <option value="90|hoje">90 dias</option>
+        </select>
+        <button class="botao-icone" id="recarregarFunil">Atualizar</button>
+      </div>
+
+      <div class="kpis kpis-anuncios" id="kpisFunil"></div>
+
+      <div class="painel">
+        <h2>Onde as pessoas param, tela por tela</h2>
+        <div id="etapasFunil"></div>
+        <p class="rodape" id="legendaFunil"></p>
+      </div>
+
+      <div class="painel">
+        <h2>Do checkout até o pagamento</h2>
+        <div id="checkoutFunil"></div>
+      </div>
+
+      <div class="painel">
+        <h2>Quem parou e não voltou</h2>
+        <div id="abandonoFunil"></div>
+      </div>
+
+      <!--
+        O que o público respondeu no quiz — e qual resposta vira venda.
+
+        Este funil é de diagnóstico: cada pergunta pede que a pessoa diga o que
+        está apertando na vida dela. A opção mais escolhida e a que mais compra
+        quase nunca são a mesma, e é a segunda que decide o próximo anúncio e a
+        frase da mensagem de recuperação.
+      -->
+      <!--
+        Até onde as pessoas assistem a VSL.
+
+        A maior perda do funil acontece nesta tela, e era cega: 87% de quem
+        chega na oferta não gera PIX, e não dava para saber se saíam nos
+        primeiros segundos ou já perto do fim — que pedem consertos opostos.
+      -->
+      <div class="painel">
+        <h2>Até onde assistem o vídeo da oferta</h2>
+        <div id="vslFunil"></div>
+      </div>
+
+      <div class="painel">
+        <h2>O que o público respondeu, e o que virou venda</h2>
+        <div id="quizFunil"></div>
+      </div>
+    </section>
+    <section id="abaPagamentos" role="tabpanel" hidden>
+      <div class="painel" id="painelPagamentos"></div>
+    </section>
+    <section id="abaAcessos" role="tabpanel" hidden>
+      <div class="barra-periodo">
+        <span class="atualizado" id="resumoAcessos"></span>
+        <span class="espaco"></span>
+        <select id="periodoAcessos" aria-label="Período dos acessos">
+          <option value="1">Hoje</option>
+          <option value="7" selected>7 dias</option>
+          <option value="30">30 dias</option>
+          <option value="90">90 dias</option>
+        </select>
+        <button class="botao-icone" id="recarregarAcessos">Atualizar</button>
+      </div>
+
+      <div class="kpis kpis-anuncios" id="kpisAcessos"></div>
+
+      <div class="chips" id="chipsAcessos" style="margin-bottom:12px">
+        <button data-secao="entregas" aria-pressed="true">Entregas aos clientes</button>
+        <button data-secao="acoes" aria-pressed="false">Ações no painel</button>
+        <button data-secao="logins" aria-pressed="false">Entradas no painel</button>
+      </div>
+
+      <div class="painel" id="secaoEntregasAcessos">
+        <h2>Quem pagou e abriu (ou não) a página de entrega</h2>
+        <div class="chips" id="chipsEntregasAcessos" style="margin-bottom:8px">
+          <button data-filtro="" aria-pressed="true">Todos</button>
+          <button data-filtro="sem" aria-pressed="false">Pagou e nunca abriu</button>
+          <button data-filtro="com" aria-pressed="false">Abriu</button>
+        </div>
+        <div class="tabela-rolavel">
+          <table class="tabela-anuncios">
+            <thead>
+              <tr>
+                <th>Pago em</th>
+                <th>Cliente</th>
+                <th>Produtos</th>
+                <th>E-mail de acesso</th>
+                <th class="num">Aberturas</th>
+                <th>Última abertura</th>
+                <th>IP</th>
+              </tr>
+            </thead>
+            <tbody id="corpoEntregasAcessos"></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="vazioEntregasAcessos" hidden>Nenhum pedido pago no período.</p>
+        <p class="rodape">"Aberturas" conta as vezes que a página de entrega (link do e-mail) foi aberta. Quem pagou e nunca abriu talvez não tenha visto o e-mail — vale um WhatsApp com o link.</p>
+      </div>
+
+      <div class="painel" id="secaoAcoesAcessos" hidden>
+        <h2>O que foi feito no painel</h2>
+        <div class="tabela-rolavel">
+          <table class="tabela-anuncios">
+            <thead>
+              <tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Alvo</th><th>Detalhe</th><th>IP</th><th class="num">Status</th></tr>
+            </thead>
+            <tbody id="corpoAcoesAcessos"></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="vazioAcoesAcessos" hidden>Nenhuma ação registrada no período. A auditoria começou a gravar em 15/08/2026.</p>
+      </div>
+
+      <div class="painel" id="secaoLoginsAcessos" hidden>
+        <h2>Entradas no painel</h2>
+        <div class="tabela-rolavel">
+          <table class="tabela-anuncios">
+            <thead>
+              <tr><th>Quando</th><th>Resultado</th><th>Papel</th><th>IP</th><th>Navegador</th></tr>
+            </thead>
+            <tbody id="corpoLoginsAcessos"></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="vazioLoginsAcessos" hidden>Nenhuma entrada registrada no período.</p>
+        <p class="rodape">Senha errada 5 vezes do mesmo IP bloqueia por 15 min. Se aparecer IP que você não reconhece tentando entrar, troque a senha.</p>
+      </div>
+    </section>
+
+    <!--
+      E-mails: o funil da campanha de recuperação.
+
+      Quatro degraus em vez de um total, porque cada queda entre eles tem
+      conserto diferente: enviado→clicou é o assunto do e-mail, clicou→pediu
+      PIX é a página e o preço, pediu→pagou é o meio de pagamento. Um número
+      só ("a campanha rendeu X") não diria o que mexer.
+    -->
+    <section id="abaEmails" role="tabpanel" hidden>
+      <div class="painel">
+        <div class="kpis" id="cartoesCampanha"></div>
+
+        <!--
+          Filtro e ordenação. "Abriram e não pediram" é o recorte que vale
+          dinheiro: gente que demonstrou interesse duas vezes e parou — a
+          lista mais quente que existe para um segundo toque.
+        -->
+        <div class="barra-tabela">
+          <div class="chips" id="filtroCampanha">
+            <button data-filtro="todos" aria-pressed="true">Todos</button>
+            <button data-filtro="abriram" aria-pressed="false">Abriram</button>
+            <button data-filtro="nao-abriram" aria-pressed="false">Não abriram</button>
+            <button data-filtro="quentes" aria-pressed="false">Abriram e não pediram</button>
+            <button data-filtro="pagaram" aria-pressed="false">Contribuíram</button>
+          </div>
+          <span style="flex:1"></span>
+          <span class="atualizado" id="contagemCampanha"></span>
+        </div>
+
+        <div class="envolve-tabela">
+          <table>
+            <thead>
+              <tr>
+                <th data-ordem-campanha="nome">Pessoa</th>
+                <th data-ordem-campanha="enviado">Enviado</th>
+                <th data-ordem-campanha="abriu">Abriu</th>
+                <th class="num" data-ordem-campanha="cliques">Vezes</th>
+                <th data-ordem-campanha="pix">Pediu o PIX</th>
+                <th data-ordem-campanha="pago">Pagou</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaCampanha"></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="vazioCampanha" hidden>Nenhum e-mail de campanha foi disparado ainda.</p>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------------------------- CRM -- -->
+    <!--
+      Camada de leitura sobre eventos + pedidos (server/crm.ts). Uma pessoa =
+      uma sessão do funil. Nada aqui é uma segunda base: cada número sai do
+      que o funil e o checkout já gravam. Só notas e marcações são próprias.
+    -->
+    <!-- ------------------------------------------------------ Boletos -- -->
+    <!--
+      Boleto aqui é OFFLINE: o site registra quem pediu, alguém emite à mão em
+      outro gateway, e o desfecho é marcado nesta tela. Nada disso chega por
+      webhook — se ninguém marcar, ninguém sabe.
+    -->
+    <section id="abaBoletos" role="tabpanel" hidden>
+      <div class="barra-periodo">
+        <span class="atualizado" id="resumoBoletos"></span>
+        <span class="espaco"></span>
+        <select id="periodoBoletos" aria-label="Período dos boletos">
+          <option value="7">7 dias</option>
+          <option value="30" selected>30 dias</option>
+          <option value="90">90 dias</option>
+          <option value="180">180 dias</option>
+        </select>
+        <button class="botao-icone" id="recarregarBoletos">Atualizar</button>
+      </div>
+
+      <div class="kpis kpis-anuncios" id="kpisBoletos"></div>
+
+      <div class="painel">
+        <div class="chips" id="chipsSituacaoBoletos" style="margin-bottom:10px">
+          <button data-situacao="" aria-pressed="true">Todos</button>
+          <button data-situacao="pedido" aria-pressed="false">Pediram</button>
+          <button data-situacao="gerado" aria-pressed="false">Boleto gerado</button>
+          <button data-situacao="pago" aria-pressed="false">Pagaram</button>
+          <button data-situacao="nao_pago" aria-pressed="false">Não pagaram</button>
+        </div>
+        <input type="search" id="buscaBoletos" placeholder="Buscar por nome, e-mail, CPF ou WhatsApp" style="width:100%;margin-bottom:10px" />
+
+        <div id="listaBoletos" class="lista-boletos"></div>
+        <p class="vazio" id="vazioBoletos" hidden>Ninguém pediu boleto nesse período.</p>
+      </div>
+    </section>
+
+    <section id="abaCrm" role="tabpanel" hidden>
+      <div class="barra-periodo">
+        <span class="atualizado" id="resumoCrm"></span>
+        <span class="espaco"></span>
+        <select id="periodoCrm" aria-label="Período do CRM">
+          <option value="1|hoje" selected>Hoje</option>
+          <option value="1|ontem">Ontem</option>
+          <option value="7|hoje">7 dias</option>
+          <option value="30|hoje">30 dias</option>
+          <option value="90|hoje">90 dias</option>
+        </select>
+        <button class="botao-icone" id="recarregarCrm">Atualizar</button>
+      </div>
+
+      <div class="chips" id="chipsSecaoCrm" style="margin-bottom:12px">
+        <button data-secao="visao" aria-pressed="true">Visão geral</button>
+        <button data-secao="leads" aria-pressed="false">Pessoas</button>
+        <button data-secao="reciprocidade" aria-pressed="false">Reciprocidade</button>
+      </div>
+
+      <!-- Visão geral: cards + funil + segmentos -->
+      <div id="secaoCrmVisao">
+        <div class="kpis kpis-anuncios" id="kpisCrm"></div>
+        <div class="painel">
+          <h2>Funil de quem pediu e de quem comprou</h2>
+          <div id="funilCrm"></div>
+        </div>
+        <div class="painel">
+          <h2>Quem está em cada grupo agora</h2>
+          <div id="segmentosCrm"></div>
+          <p class="rodape" id="regraCrm"></p>
+        </div>
+      </div>
+
+      <!-- Pessoas: filtros + busca + tabela -->
+      <div id="secaoCrmLeads" hidden>
+        <div class="painel">
+          <div class="chips" id="chipsCompraCrm" style="margin-bottom:8px">
+            <button data-compra="" aria-pressed="true">Todos</button>
+            <button data-compra="nao_comprou" aria-pressed="false">Não pagaram</button>
+            <button data-compra="pix_pendente" aria-pressed="false">PIX pendente</button>
+            <button data-compra="comprou" aria-pressed="false">Pagaram</button>
+          </div>
+          <div class="chips" id="chipsSegmentoCrm" style="margin-bottom:8px">
+            <button data-segmento="" aria-pressed="true">Todos os grupos</button>
+            <button data-segmento="RECIPROCIDADE" aria-pressed="false">Reciprocidade</button>
+            <button data-segmento="RECUPERACAO_DE_COBRANCA" aria-pressed="false">Recuperação</button>
+            <button data-segmento="RECUPERACAO_DE_INTERESSE" aria-pressed="false">Pediu e parou</button>
+            <button data-segmento="CLIENTE" aria-pressed="false">Clientes</button>
+            <button data-segmento="SEM_CONTATO" aria-pressed="false">Sem contato</button>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+            <input type="search" id="buscaCrm" placeholder="Buscar por nome, e-mail, WhatsApp ou pedido" style="flex:1;min-width:220px" />
+            <input type="text" id="anuncioCrm" placeholder="Anúncio (parte do nome)" style="min-width:180px" />
+            <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="soPedidoCrm" /> só quem pediu oração</label>
+          </div>
+          <div class="tabela-rolavel">
+            <table class="tabela-anuncios" id="tabelaCrm">
+              <thead>
+                <tr>
+                  <th>Pessoa</th>
+                  <th>Pedido de oração</th>
+                  <th>Entrada</th>
+                  <th>Origem</th>
+                  <th>Etapa</th>
+                  <th>PIX</th>
+                  <th>Pagou</th>
+                  <th>Status</th>
+                  <th>Grupo</th>
+                  <th>Último contato</th>
+                  <th>Próxima ação</th>
+                </tr>
+              </thead>
+              <tbody id="corpoCrm"></tbody>
+            </table>
+          </div>
+          <p class="vazio" id="vazioCrm" hidden>Ninguém com esses filtros no período.</p>
+        </div>
+      </div>
+
+      <!-- Reciprocidade: fila de quem pediu e não comprou -->
+      <div id="secaoCrmReciprocidade" hidden>
+        <div class="painel">
+          <h2>Pediram oração e ainda não contribuíram</h2>
+          <p class="rodape">Só quem já saiu da recuperação de cobrança (ou nunca gerou PIX) e não pediu para não ser contatado. Quem pagar some daqui sozinho.</p>
+          <div class="chips" id="chipsDiasReciprocidade" style="margin:8px 0">
+            <button data-dias="" aria-pressed="true">Todos</button>
+            <button data-dias="0" aria-pressed="false">Hoje</button>
+            <button data-dias="1" aria-pressed="false">1 dia</button>
+            <button data-dias="2" aria-pressed="false">2 dias</button>
+            <button data-dias="3" aria-pressed="false">3+ dias</button>
+            <button data-dias="sem" aria-pressed="false">Sem contato</button>
+            <button data-dias="com" aria-pressed="false">Já contatado</button>
+          </div>
+          <div class="tabela-rolavel">
+            <table class="tabela-anuncios">
+              <thead>
+                <tr><th>Pessoa</th><th>WhatsApp</th><th>Pedido</th><th>Pediu em</th><th>Origem</th><th>Etapa</th><th>Último contato</th><th>Dias</th><th>Status</th></tr>
+              </thead>
+              <tbody id="corpoReciprocidade"></tbody>
+            </table>
+          </div>
+          <p class="vazio" id="vazioReciprocidade" hidden>Ninguém na fila de reciprocidade no período.</p>
+        </div>
+      </div>
+    </section>
+    <!-- ------------------------------------------------------------ TikTok -- -->
+    <section id="abaTiktok" role="tabpanel" hidden>
+      <div class="painel">
+        <h2>Pixel do TikTok</h2>
+        <p class="rodape">
+          Cole só o <strong>identificador</strong> do pixel — algo como
+          <em>DA0HO4RC77U575JE9T2G</em>. Não cole o bloco de <code>&lt;script&gt;</code>:
+          o painel recusa, e é de propósito. Aquele bloco copiado do TikTok chega
+          quase sempre com <code>||</code> virado em <code>%7C%7C</code>, e colado
+          numa página ele derruba todo o JavaScript do site — funil e checkout
+          incluídos.
+        </p>
+
+        <div class="linha-form">
+          <label for="tiktokPixel">Pixel (sdkid)</label>
+          <input type="text" id="tiktokPixel" placeholder="DA0HO4RC77U575JE9T2G" autocomplete="off" spellcheck="false">
+        </div>
+
+        <div class="linha-form">
+          <label for="tiktokToken">Token da API de Eventos <span class="nota">(opcional)</span></label>
+          <input type="password" id="tiktokToken" placeholder="deixe em branco para não alterar" autocomplete="off">
+          <p class="nota" id="tiktokTokenEstado"></p>
+        </div>
+
+        <label class="interruptor">
+          <input type="checkbox" id="tiktokLigado">
+          <span>Disparar eventos para o TikTok</span>
+        </label>
+
+        <p class="nota" id="tiktokAviso" hidden></p>
+
+        <div class="acoes">
+          <button class="botao-principal" id="botaoSalvarTiktok">Salvar</button>
+          <span class="nota" id="tiktokSalvo"></span>
+        </div>
+      </div>
+
+      <div class="painel">
+        <h2>Parâmetros de rastreio do criativo</h2>
+        <p class="rodape">
+          Os parâmetros que o painel aceita da URL do anúncio. O que não estiver
+          nesta lista é <strong>descartado</strong> — é o que impede alguém de
+          forjar uma URL e injetar lixo no seu relatório.
+        </p>
+
+        <div class="linha-form">
+          <label for="tiktokParametros">Um por linha</label>
+          <textarea id="tiktokParametros" rows="8" spellcheck="false"
+                    placeholder="ttclid&#10;tt_campaign_id&#10;tt_adgroup_id"></textarea>
+          <p class="nota">Só letras minúsculas, números e <code>_</code>. Máximo de 40.</p>
+        </div>
+
+        <div class="acoes">
+          <button class="botao-secundario" id="botaoParametrosPadrao">Voltar ao padrão</button>
+        </div>
+
+        <h3>A URL que vai no anúncio</h3>
+        <p class="rodape">
+          Cole isto no campo <em>URL</em> do TikTok Ads Manager. As macros do TikTok
+          são <code>__NOME__</code>, com dois underscores de cada lado — diferente
+          do <code>{{campaign.id}}</code> do Meta. Trocar a sintaxe faz o parâmetro
+          chegar literal, e o relatório enche de linhas sem sentido sem nada acusar erro.
+        </p>
+        <pre class="bloco-copiavel" id="tiktokUrlExemplo"></pre>
+        <div class="acoes">
+          <button class="botao-secundario" id="botaoCopiarUrlTiktok">Copiar a URL</button>
+          <span class="nota" id="tiktokUrlCopiada"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------------------------------------------------- BMs -- -->
+    <section id="abaBms" role="tabpanel" hidden>
+      <div class="barra">
+        <!--
+          "Hoje" e data-dias="1", nao "0".
+
+          A janela do servidor exige dias > 0: com 0 ela cai no padrao de 7 e a
+          aba mostrava a SEMANA inteira com o botao "Hoje" aceso. Nada acusava
+          erro -- so um numero alto demais, que quem esta decidindo verba hoje le
+          como se fosse de hoje. Os chips das abas Pedidos e CRM usam 0 com outro
+          sentido (filtro no proprio navegador), e por isso continuam como estao.
+        -->
+        <div class="chips" id="chipsPeriodoBms">
+          <button data-dias="1" aria-pressed="false">Hoje</button>
+          <button data-dias="7" aria-pressed="true">7 dias</button>
+          <button data-dias="30" aria-pressed="false">30 dias</button>
+          <button data-dias="90" aria-pressed="false">90 dias</button>
+        </div>
+        <span class="espaco"></span>
+        <button class="botao-icone" id="importarGastoBms">Importar gasto de cada BM</button>
+        <button class="botao-icone" id="recarregarBms">Atualizar</button>
+      </div>
+      <p class="rodape" id="avisoImportacaoBms"></p>
+
+      <div class="painel">
+        <h2>Como cada gerenciador está indo</h2>
+        <p class="rodape">
+          Clique numa linha para ver as campanhas daquela BM na aba Anúncios.
+        </p>
+        <div class="envolve-tabela">
+          <table class="tabela-anuncios">
+            <thead><tr id="cabecalhoBms"></tr></thead>
+            <tbody id="corpoBms"></tbody>
+            <tfoot><tr id="rodapeBms"></tr></tfoot>
+          </table>
+        </div>
+        <p class="rodape" id="avisoBms"></p>
+      </div>
+
+      <div class="painel">
+        <h2>Cadastro dos gerenciadores</h2>
+        <p class="rodape">
+          O <strong>identificador</strong> é o que vai no <code>bm=</code> da URL do
+          anúncio daquela BM — é ele que liga o clique a este cadastro. Use letra
+          minúscula, número, <code>_</code> e <code>-</code>.
+        </p>
+
+        <div class="envolve-tabela">
+          <table class="tabela-anuncios">
+            <thead>
+              <tr>
+                <th>Identificador</th><th>Nome</th><th>Pixel</th>
+                <th>Conta de anúncios</th><th>Token de Conversões</th>
+                <th>Token de leitura</th><th>Ativa</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="corpoCadastroBms"></tbody>
+          </table>
+        </div>
+
+        <p class="rodape">
+          <strong>São dois tokens diferentes.</strong> O de <em>Conversões</em> sai do
+          Gerenciador de Eventos e manda a compra para o pixel desta BM. O de
+          <em>leitura</em> precisa de <code>ads_read</code> sobre a conta de anúncios e é
+          o que traz o gasto. Um token de escopo largo serve para os dois; o do
+          Gerenciador de Eventos, sozinho, <strong>não lê o gasto</strong>.
+        </p>
+
+        <div class="acoes">
+          <button class="botao-secundario" id="botaoNovaBm">+ Adicionar BM</button>
+          <button class="botao-principal" id="botaoSalvarBms">Salvar</button>
+          <span class="nota" id="bmsSalvo"></span>
+        </div>
+
+        <h3>A URL para colar em cada BM</h3>
+        <p class="rodape">
+          Escolha a BM acima e cole isto no campo <em>Parâmetros de URL</em> do
+          Gerenciador dela. Só o <code>bm=</code> muda de uma para outra.
+        </p>
+        <pre class="bloco-copiavel" id="urlDaBm"></pre>
+        <div class="acoes">
+          <select id="bmParaUrl" aria-label="BM da URL"></select>
+          <button class="botao-secundario" id="botaoCopiarUrlBm">Copiar</button>
+          <span class="nota" id="urlBmCopiada"></span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div id="areaModal"></div>
+
+<script src="/admin.js"></script>
+<script src="/admin-crm.js"></script>
+<script src="/admin-boletos.js"></script>
+<script src="/admin-relatorios.js"></script>
+<script src="/admin-resumo.js"></script>
+<script src="/admin-acessos.js"></script>
+</body>
+</html>

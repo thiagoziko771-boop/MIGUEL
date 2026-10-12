@@ -1,0 +1,29 @@
+{
+  "_leia": [
+    "Teste do ângulo da inveja difusa (14/08/2026): 'sinto que tem gente que me",
+    "inveja, mas não sei quem' — 38% marcam essa resposta e ela tem a melhor",
+    "taxa de compra da pergunta (4,4%). Arte no GPT Image 2 (tipografia",
+    "gigante, pedido do dono) convertida para 4:5 pelo Nano Banana 2 com o",
+    "texto conferido letra a letra.",
+    "",
+    "ESTRUTURA A PEDIDO DO DONO (14/08): campanha própria, um conjunto, um",
+    "anúncio, R$ 15/dia — mesma família dos testes TESTE-QUIZ-*.",
+    "",
+    "Sobe com:",
+    "  node scripts/gerenciar-anuncios.mjs subir-lote campanhas/teste-quiz-inveja.json"
+  ],
+
+  "campanha": "TESTE-QUIZ-INVEJA",
+  "reais": 15,
+  "idadeMin": 45,
+  "inicioEm": "2026-08-14T16:50:00-03:00",
+
+  "pecas": [
+    {
+      "nome": "A-INVEJA-SEM-ROSTO-4x5",
+      "arquivo": "criativos-teste-quiz/inveja-sem-rosto-4x5.png",
+      "titulo": "Sente que algo segura a sua vida?",
+      "mensagem": "Nem todo atraso na sua vida é coincidência. Se você sente que ALGO te segura — no trabalho, na família, no dinheiro — e não sabe o quê... a espada de Miguel corta o que os olhos não veem. ⚔️ Receba agora a oração de proteção. 🙏"
+    }
+  ]
+}

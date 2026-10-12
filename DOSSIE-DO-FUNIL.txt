@@ -1,0 +1,296 @@
+===============================================================================
+DOSSIE DO FUNIL — REZAS SAGRADAS / ARCANJO MIGUEL
+Publico-alvo, entregaveis, escada de precos e a copy de cada tela
+Levantado em 20/08/2026, direto do codigo em producao.
+===============================================================================
+
+Este documento existe para ser lido por quem vai ESCREVER alguma coisa para o
+funil — presell, criativo, e-mail, anuncio — sem precisar abrir o codigo.
+
+A FONTE DA VERDADE continua sendo o codigo. Se este arquivo divergir dele, o
+codigo esta certo e este arquivo esta velho. Onde cada coisa mora:
+
+  src/data/funnelData.ts   TODA a copy das telas + o relogio do botao
+  server/catalog.ts        os precos (unica fonte, o navegador nunca manda valor)
+  server/delivery.ts       o que o cliente recebe depois de pagar
+  src/App.tsx              a ordem das telas e o evento de cada etapa
+
+
+-------------------------------------------------------------------------------
+1. O QUE E O NEGOCIO
+-------------------------------------------------------------------------------
+
+Venda de produtos digitais devocionais cristaos, por PIX, com trafego pago.
+
+A promessa central: a pessoa responde um quiz espiritual de 9 perguntas sobre a
+propria vida (protecao da familia, dinheiro, inveja, sinais recentes), o sistema
+"analisa o merecimento" dela numa tela de calculo, e ao fim libera uma "Oracao
+Sagrada do Arcanjo Miguel" apresentada como preparada a partir das respostas que
+ela mesma deu. A venda acontece numa VSL ao final do quiz, com checkout PIX
+embutido na propria pagina.
+
+Endereco em producao: https://migueltechama.vercel.app
+
+
+-------------------------------------------------------------------------------
+2. PUBLICO-ALVO
+-------------------------------------------------------------------------------
+
+Adulto, majoritariamente MAIS VELHO, de fe crista/catolica, comprando PELO
+CELULAR, com pouca intimidade com tecnologia.
+
+Isso nao e um paragrafo de persona — e o motivo de metade das decisoes do
+produto. Cada consequencia abaixo ja custou algo para ser aprendida:
+
+  - PIX em vez de cartao. E a forma de pagar que essa pessoa domina.
+  - CPF pedido de forma EXPLICITA, com o motivo escrito na tela. O CPF trava
+    quem pode pagar o QR: se outra pessoa pagar, o pagamento e rejeitado e o
+    estorno leva ate 48 h.
+  - Alvos de toque grandes, campos de 16 px, nada de jargao.
+  - Tutorial em video vendido junto do aplicativo, no upsell — porque instalar
+    um app e a barreira real desse publico.
+  - A pessoa SOME para o app do banco e volta minutos ou horas depois. O
+    checkout precisa retomar de onde parou, e o carimbo do anuncio fica gravado
+    no pedido (nao na sessao) por causa disso.
+  - Todo texto de erro e escrito na lingua dela: "Aguardando", nao "pending";
+    "O sistema de Pix recusou", nao "gateway error 502".
+
+Nome que aparece no app do banco na hora de pagar: hoje AXIA_TECNOLOGIA_LTDA
+(SAO_PAULO). Isso importa mais do que parece — em 14/08/2026 um comprador
+desistiu duas vezes porque o banco marcou o nome anterior como suspeito.
+
+
+-------------------------------------------------------------------------------
+3. ESCADA DE PRODUTOS E ENTREGAVEIS
+-------------------------------------------------------------------------------
+
+FRONT-END (a oferta principal)
+
+  Oracao Sagrada do Arcanjo Miguel .......................... R$ 47,00
+  ENTREGA: audio completo da Oracao, apresentado como preparado a partir das
+           respostas do quiz.
+
+ORDER BUMPS (marcados no proprio checkout, antes de pagar)
+
+  Guia Sagrado dos 150 Salmos de Protecao & Libertacao ...... R$ 27,00
+  ENTREGA: livro digital com os 150 Salmos, em PDF.
+
+  Consagracao do Seu Nome na Vela Sagrada de 7 Dias ......... R$ 14,90
+  ENTREGA: confirmacao da consagracao do nome na vela de 7 dias. E o unico
+           item do tipo "servico" — nao tem arquivo para baixar.
+
+UPSELL (aparece segundos depois de a compra ser confirmada)
+
+  Aplicativo Espiritual com Rotina Diaria & Tutorial em Video  R$ 47,00
+  ancora riscada: R$ 297,00
+  ENTREGA: acesso ao aplicativo completo + video tutorial de instalacao.
+
+  Nota de estrategia: era R$ 97,00 ate 17/08/2026. Foi baixado para R$ 47,00 —
+  o MESMO numero que a pessoa acabou de aceitar. Repetir o valor ja aceito e a
+  oferta mais facil de dizer sim que existe.
+
+DOWNSELL (aparece se o upsell for recusado)
+
+  Aplicativo Espiritual — Versao Essencial .................. R$ 19,00
+  ancora: os R$ 47,00 que a pessoa acabou de recusar.
+  ENTREGA: acesso a versao essencial do aplicativo.
+
+CONTRIBUICAO VOLUNTARIA (somada ao pedido, no checkout)
+
+  Contribuicao de gratidao ............ R$ 10,00 / R$ 25,00 / R$ 50,00
+  NAO ENTREGA NADA. E acrescimo a mesma Oracao. Existe porque um comprador
+  pediu, em 17/08/2026. Valores FIXOS e nunca campo livre: quem soma e o
+  servidor, o navegador so manda o ID.
+
+CAMPANHA DE RECUPERACAO (so por link assinado, com prazo — nao ha caminho no
+site que leve a esses precos)
+
+  Oracao Sagrada do Arcanjo Miguel .......................... R$ 27,99
+  Guia dos 150 Salmos ....................................... R$ 17,00
+  Vela Sagrada de 7 Dias .................................... R$  9,90
+
+  Sao produtos com ID PROPRIO, e nao desconto sobre os de cima. O motivo e
+  contabil: o painel mostra quanto veio da recuperacao e quanto veio do funil
+  normal, sem ninguem precisar subtrair.
+
+TICKET
+  Minimo: R$ 47,00 (so a Oracao)
+  Comum:  R$ 74,00 (Oracao + Salmos) — e o valor que mais aparece nas vendas
+  Cheio:  R$ 88,90 (Oracao + Salmos + Vela)
+
+
+-------------------------------------------------------------------------------
+4. AS TELAS, NA ORDEM
+-------------------------------------------------------------------------------
+
+  1   CAPA          promessa + inicio do quiz
+  2-10 QUIZ         9 perguntas (lista completa no item 5)
+  11  INTERMISSAO   audio de depoimento ("Irma Maria")
+  12  DEPOIMENTOS   prova social
+  13  PROCESSAMENTO "Analisando seu Merecimento..." (tela de calculo, temporizada)
+  14  OFERTA        VSL + checkout PIX embutido
+      -> UPSELL     apos a compra confirmada
+      -> DOWNSELL   se o upsell for recusado
+      -> /obg       pagina de obrigado
+
+O RELOGIO DO BOTAO: na tela da oferta, o botao de compra so aparece aos
+242 segundos de VSL (4 min 2 s). O numero vive em `segundosAteOCta` no
+funnelData.ts. Quem mexer na VSL precisa mexer nele junto.
+
+
+-------------------------------------------------------------------------------
+5. A COPY, TELA POR TELA
+-------------------------------------------------------------------------------
+
+5.1 CAPA
+
+  Chamada de acao: "Receber a oracao de protecao"
+
+  Existem VARIANTES de capa cadastradas (HERO_VARIANTES no funnelData.ts) para
+  teste de titulo. A variante ativa e escolhida por parametro de URL.
+
+5.2 QUIZ — as 9 perguntas, na ordem
+
+  1. Se voce pudesse pedir uma intervencao urgente do Arcanjo Miguel hoje,
+     [qual seria]?
+  2. Como esta sua relacao com o dinheiro hoje?
+  3. Voce sente que, por mais que se esforce, as coisas nao melhoram?
+  4. Voce teme pela seguranca de alguem que voce ama?
+  5. Voce acredita que existem pessoas que te invejam ou te desejam mal?
+  6. Nos ultimos dias ou semanas, voce teve algum desses sinais?
+  7. Voce esta disposto(a) a seguir as orientacoes sagradas para receber
+     [as bencaos]?
+  8. Se voce receber a Oracao do Arcanjo Miguel, voce se compromete a fazer
+     [a oracao]?
+  9. Voce esta pronto(a) para receber suas bencaos AGORA?
+
+  A estrutura e proposital: as 6 primeiras levantam DOR (dinheiro, medo,
+  inveja, sinais). As 3 ultimas pedem COMPROMISSO — e sao elas que preparam o
+  "sim" da oferta.
+
+5.3 INTERMISSAO DE AUDIO
+
+  Quem fala: "Irma Maria"
+  Titulo:    "Mensagem do Arcanjo Miguel para seu momento de vida"
+  Gancho:    "...nao era uma oracao comum"
+  Botao:     "Continuar"
+
+5.4 DEPOIMENTOS
+
+  Quatro, com nome, cidade e ha quanto tempo:
+    Teresinha de Jesus — Belo Horizonte, MG — ha 12 minutos
+    Geraldo Magela     — Sao Paulo, SP      — ha 28 minutos
+    Maria das Gracas   — Fortaleza, CE      — ha 45 minutos
+    Francisca Oliveira — Salvador, BA       — ha 1 hora
+
+  ATENCAO PARA QUEM FOR MEXER: as fotos desses depoimentos vem do Unsplash
+  (banco de imagens). Nao sao fotos das pessoas nomeadas.
+
+5.5 PROCESSAMENTO
+
+  Titulo:   "Analisando seu Merecimento..."
+  Subtitulo:"Sua oracao esta sendo preparada e consagrada para sua vida."
+
+  E temporizada. Nao ha o que clicar — a tela avanca sozinha.
+
+5.6 OFERTA (a tela que vende)
+
+  "Parabens!"
+  "Entre milhares... voce foi um dos selecionados."
+  "A oracao secreta do Arcanjo Miguel foi liberada para voce."
+  "Para destravar bencaos financeiras e curas inexplicaveis em apenas
+   24 horas."
+
+  Bloco do produto: "SUA ORACAO PERSONALIZADA"
+  Ancora riscada:   R$ 197,00
+  Preco:            R$ 47,00
+
+  Botao principal:  "Garantir Minha Oracao Sagrada Agora"
+  Botao secundario: "Acessar Oracao do Arcanjo Miguel"
+
+  Garantia: "Garantia incondicional de 30 dias com devolucao integral sem
+             perguntas"
+  Selos:    "Acesso Imediato - Pagamento 100% Seguro - Ambiente Criptografado"
+
+5.7 UPSELL
+
+  "📱 OFERTA ESPECIAL DE UPSELL"
+  "Aplicativo Espiritual com Rotina Diaria & Tutorial em Video"
+  "Acesse o Aplicativo Espiritual com sua Rotina Sagrada Diaria + Video
+   Tutorial Passo a Passo de Instalacao."
+
+  De R$ 297,00 por R$ 47,00
+
+  O que promete:
+    - Aplicativo Espiritual Completo
+    - Video Tutorial Passo a Passo de Instalacao
+    - Rotina Diaria de Oracao & Protecao
+    - "Guia diario para momentos de afligimento, abertura de caminhos
+       financeiros e paz na familia."
+
+  Garantia: "Garantia Total de 30 Dias — Sinta a transformacao no seu lar ou
+             receba 100% do seu dinheiro de volta sem burocracia."
+
+5.8 DOWNSELL
+
+  "🙏 ESPERE! UMA ULTIMA BENCAO PARA VOCE"
+  "Que tal levar apenas o essencial por um valor simbolico?"
+  "SIM! QUERO A VERSAO ESSENCIAL POR APENAS R$ 19,00"
+  "Este e o menor valor que conseguimos liberar. Essa oferta nao aparecera
+   novamente."
+
+
+-------------------------------------------------------------------------------
+6. PROMESSAS QUE O TEXTO ASSUME — E QUE PRECISAM SER VERDADE
+-------------------------------------------------------------------------------
+
+Se voce for escrever um presell, um criativo ou um e-mail, estas sao as
+afirmacoes que o funil ja faz. Repetir e seguro; CONTRADIZER cria promessa que
+o produto nao cumpre:
+
+  - garantia de 30 dias, incondicional, devolucao integral, sem perguntas;
+  - acesso imediato apos a confirmacao do pagamento;
+  - a oracao e apresentada como preparada a partir das respostas do quiz;
+  - "bencaos financeiras e curas inexplicaveis em apenas 24 horas" — e a
+    promessa mais forte da pagina, e a que mais exige cuidado em anuncio;
+  - escassez: o downsell diz "nao aparecera novamente", e ele de fato so
+    aparece uma vez no fluxo.
+
+O QUE NAO E VERDADE E NAO PODE SER DITO:
+  - que os depoimentos sao de pessoas reais fotografadas (as imagens sao de
+    banco de imagens);
+  - qualquer promessa de cura de doenca, resultado medico ou garantia de
+    dinheiro. Isso quebra politica de anuncio antes de quebrar qualquer
+    outra coisa.
+
+
+-------------------------------------------------------------------------------
+7. SE FOR MONTAR UM PRESELL EM OUTRO DOMINIO
+-------------------------------------------------------------------------------
+
+O funil carimba a origem LENDO A URL na primeira carga, e nao tem segunda
+chance. Um presell na frente recebe os parametros do anuncio; se o botao dele
+for um link fixo, o funil abre limpo e a venda chega sem saber de onde veio.
+
+O CTA do presell precisa copiar a query string inteira para o destino:
+
+    const destino = new URL('https://migueltechama.vercel.app/');
+    new URLSearchParams(location.search).forEach((v, k) =>
+      destino.searchParams.set(k, v));
+    botao.href = destino.toString();
+
+Sem lista branca, de proposito: parametro novo passa junto sem precisar mexer.
+
+Os que NAO podem se perder:
+
+    fbclid ......... vira `fbc`; e o que liga a venda a campanha no Meta
+    bm ............. qual dos 3 gerenciadores mandou o visitante
+    utm_source, utm_medium, utm_campaign, utm_term, utm_content, utm_id
+    fb_campaign_id, fb_adset_id, fb_ad_id, fb_placement, fb_source
+    gclid .......... Google Ads
+    ttclid, tt_campaign_id, tt_adgroup_id, tt_ad_id, tt_placement, tt_source
+
+
+===============================================================================
+FIM
+===============================================================================

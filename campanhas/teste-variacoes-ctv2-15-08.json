@@ -1,0 +1,55 @@
+{
+  "_leia": [
+    "Lote de 5 variações do criativo vencedor CTV-2 (Miguel de armadura, 4:5),",
+    "gerado em 15/08 no Nano Banana 2 usando o CTV-2 como referência: mesmo",
+    "esqueleto (verbo de comando no topo, Miguel de corpo inteiro, luz sobre",
+    "tempestade, botão desenhado), muda só a headline. Ângulos: urgência,",
+    "proteção da família, escolhido, oração guardada, antes de dormir.",
+    "",
+    "Campanha de TESTE, separada da escala: 1 conjunto R$ 50/dia, otimizada por",
+    "CHECKOUT INICIADO (evento) — em 2 dias a conta fez 22 IC para 1-2 compras;",
+    "teste aprende mais rápido por IC. Corte por peça: R$ 15 (LIMITE_POR_CAMPANHA).",
+    "Título e primária de cada peça dizem o mesmo que a arte (regra de 14/08).",
+    "",
+    "  node scripts/gerenciar-anuncios.mjs subir-lote campanhas/teste-variacoes-ctv2-15-08.json"
+  ],
+
+  "campanha": "TESTE-VARIACOES-CTV2-15/08",
+  "reais": 50,
+  "idadeMin": 45,
+  "evento": "INITIATED_CHECKOUT",
+  "inicioEm": "2026-08-15T09:40:00-03:00",
+
+  "pecas": [
+    {
+      "nome": "V1-PARE-30-SEGUNDOS-4x5",
+      "arquivo": "criativos-lote-ctv2-15-08/1-PARE-30-SEGUNDOS-4x5.png",
+      "titulo": "Pare 30 segundos e ouça o que Miguel tem para você",
+      "mensagem": "Miguel esperou você chegar até aqui. Pare 30 segundos e ouça a mensagem que ele preparou para este momento da sua vida."
+    },
+    {
+      "nome": "V2-RECADO-FAMILIA-4x5",
+      "arquivo": "criativos-lote-ctv2-15-08/2-RECADO-FAMILIA-4x5.png",
+      "titulo": "Ouça agora o recado de Miguel para sua família",
+      "mensagem": "Miguel tem um recado de proteção para quem você mais ama. Ouça agora a mensagem que ele preparou para a sua família."
+    },
+    {
+      "nome": "V3-VOCE-FOI-ESCOLHIDO-4x5",
+      "arquivo": "criativos-lote-ctv2-15-08/3-VOCE-FOI-ESCOLHIDO-4x5.png",
+      "titulo": "Você foi escolhido para ouvir isto hoje",
+      "mensagem": "Não é por acaso que você chegou até aqui. Miguel preparou uma mensagem para este momento da sua vida — ouça hoje."
+    },
+    {
+      "nome": "V4-ORACAO-GUARDOU-4x5",
+      "arquivo": "criativos-lote-ctv2-15-08/4-ORACAO-GUARDOU-4x5.png",
+      "titulo": "Escute hoje a oração que Miguel guardou para você",
+      "mensagem": "Miguel guardou uma oração para este momento da sua vida. Escute hoje e desperte as bênçãos que estavam esperando por você."
+    },
+    {
+      "nome": "V5-ANTES-DE-DORMIR-4x5",
+      "arquivo": "criativos-lote-ctv2-15-08/5-ANTES-DE-DORMIR-4x5.png",
+      "titulo": "Ouça antes de dormir a mensagem que Miguel tem para você",
+      "mensagem": "Antes de dormir hoje, ouça a mensagem que Miguel preparou para você. Paz para a sua noite e para o seu amanhã."
+    }
+  ]
+}

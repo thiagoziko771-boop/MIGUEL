@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "Bash(npm run build)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(node scripts/testar-pixgo.mjs)",
+      "Bash(node scripts/testar-rastreamento.mjs)",
+      "Bash(node scripts/testar-painel-anuncios.mjs)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(npx vercel --prod)",
+      "Bash(npx vercel --prod --yes)",
+      "Bash(npx vercel ls:*)",
+      "Bash(npx vercel inspect:*)",
+      "Bash(npx vercel whoami)",
+      "Bash(curl -s https://rezassagradas.vercel.app/api/health)",
+      "Bash(curl -s https://rezassagradas.site/api/health)",
+      "Bash(curl -s http://localhost:3333/api/health)"
+    ],
+    "deny": [
+      "Read(./.env.local)",
+      "Read(./.env)",
+      "Read(./.data/**)"
+    ]
+  }
+}

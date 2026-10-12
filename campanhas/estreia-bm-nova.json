@@ -1,0 +1,80 @@
+{
+  "_leia": [
+    "A primeira campanha da BM nova. Sobe com um comando:",
+    "  node scripts/gerenciar-anuncios.mjs subir-lote campanhas/estreia-bm-nova.json",
+    "",
+    "POR QUE UM CONJUNTO SÓ, COM TRÊS PEÇAS: conta nova não tem histórico, e o",
+    "algoritmo precisa juntar sinal num lugar só para aprender. O erro do dia 12",
+    "foi o oposto — sete campanhas dividindo R$ 134, e nenhuma acumulou conversão",
+    "suficiente para sair da fase de aprendizado.",
+    "",
+    "O CRIATIVO PRINCIPAL É O CTV-2, o único com ROAS acima de 2 nos sete dias",
+    "medidos (3,74 na semana, 4,43 no melhor dia, CPA de R$ 17,81). Os outros dois",
+    "entram como variação de ângulo, não como aposta.",
+    "",
+    "ORÇAMENTO: R$ 60/dia, e não os R$ 120 do rascunho. O motivo apareceu só ao",
+    "ler a conta com o token na mão: ela é PRÉ-PAGA, com R$ 130,18 de saldo e um",
+    "spend_cap herdado de R$ 123,68 que o Meta se recusa a alterar em conta desse",
+    "tipo (erro 1487840). Ou seja, a verba real é ~R$ 114 e ninguém consegue",
+    "levantá-la por API. A R$ 120/dia isso queima num dia e não sobra manhã para",
+    "corrigir nada; a R$ 60 rende dois dias, com um ponto de decisão no meio.",
+    "",
+    "UMA PEÇA A MENOS, e o motivo importa: havia aqui uma B-DINHEIRO-NAO-SOBRA",
+    "apontando para o MESMO arquivo da peça A, mudando só o texto. O dono viu a",
+    "prévia no Gerenciador e reclamou, com razão — dois anúncios visualmente",
+    "idênticos. Pior: a arte estampa 'OUÇA AGORA O QUE MIGUEL TEM PARA TE DIZER'",
+    "e a headline dizia 'O dinheiro entra e não sobra nada?'. A imagem afirmava",
+    "uma coisa e o texto embaixo outra. Testar o ângulo do dinheiro — que o quiz",
+    "aponta como a dor de quem compra — pede ARTE nova com essa mensagem, em",
+    "campanha nova, e não uma headline colada por cima do criativo antigo.",
+    "",
+    "ANTES DE RODAR, confira no .env.local: META_CONTA_ID, META_ADS_TOKEN,",
+    "META_PIXEL_ID, META_PAGINA_ID e META_INSTAGRAM_ID."
+  ],
+
+  "campanha": "ESTREIA-BM-NOVA",
+  "reais": 60,
+  "idadeMin": 45,
+  "inicioEm": "2026-08-14T09:00:00-03:00",
+
+  "pecas": [
+    {
+      "nome": "A-OUCA-MIGUEL-4x5",
+      "arquivo": "criativos-que-venderam/1-CTV-2-ROAS-5.01.jpg",
+      "titulo": "Ouça agora o que Miguel tem para te dizer",
+      "mensagem": "Miguel esperou você chegar até aqui. Ouça a mensagem que ele preparou para este momento da sua vida."
+    },
+    {
+      "nome": "C-CTV-4-1x1",
+      "arquivo": "criativos-que-venderam/3-CTV-4-ROAS-1.63.jpg",
+      "titulo": "Ouça agora esta reza poderosa",
+      "mensagem": "A oração que desperta o que está parado na sua vida. Ouça agora."
+    },
+    {
+      "_nota": [
+        "O avatar da VSL em vídeo (9:16, 9,7 s), mandado pelo dono em 14/08 com a",
+        "instrução de dizer o mesmo que o estático campeão — por isso o texto é",
+        "idêntico ao da peça A. Entrou como terceira peça do conjunto que já roda,",
+        "e não em campanha nova: com ~R$ 114 de verba total, campanha separada era",
+        "o erro do dia 12 (sete campanhas, nenhuma juntou sinal).",
+        "",
+        "PAUSADO NO MESMO DIA, 47 minutos depois de entrar, e ANTES da régua dos",
+        "R$ 28 — caso raro em que ela não se aplica. A entrega nasceu patológica:",
+        "R$ 8,34 por SEIS impressões, tudo em Facebook Reels, CPM de R$ 1.390",
+        "contra R$ 24-29 dos estáticos no mesmo conjunto. A régua pressupõe teste",
+        "válido; a R$ 1.390 de CPM, R$ 28 compram ~20 impressões e não testam",
+        "nada. Provável causa: vídeo 480x854 (resolução baixa para Reels) + conta",
+        "recém-nascida + público 45-65 estreito + lance sem teto = leilão pagando",
+        "qualquer preço pelas primeiras entregas.",
+        "",
+        "ANTES DE REATIVAR: exportar o vídeo em 1080x1920 e subir como peça nova",
+        "(o Meta pune vídeo de baixa resolução em Reels com leilão caro), ou",
+        "reativar só depois de o conjunto acumular conversões e o leilão calibrar."
+      ],
+      "nome": "D-AVATAR-VSL-9x16",
+      "arquivo": "criativos-que-venderam/4-CTV-1-VIDEO-avatar-vsl.mp4",
+      "titulo": "Ouça agora o que Miguel tem para te dizer",
+      "mensagem": "Miguel esperou você chegar até aqui. Ouça a mensagem que ele preparou para este momento da sua vida."
+    }
+  ]
+}

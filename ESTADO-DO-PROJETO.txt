@@ -1,0 +1,1291 @@
+﻿===============================================================================
+REZAS SAGRADAS - FUNIL ARCANJO MIGUEL
+ONDE PARAMOS, O QUE JA FOI FEITO E DO QUE SE TRATA
+Documento escrito em 07/08/2026. Ultimo commit lido: 465990f (06/08/2026 14:56)
+===============================================================================
+
+Este arquivo existe para voce (ou qualquer pessoa nova) reabrir o projeto daqui
+a semanas e entender em quinze minutos o que e este negocio, o que ja esta
+pronto, o que esta pela metade e o que nao pode ser esquecido antes de gastar
+dinheiro com anuncio. Ele e o retrato de um dia; a fonte da verdade do codigo
+continua sendo o codigo.
+
+
+-------------------------------------------------------------------------------
+1. DO QUE SE TRATA A OFERTA
+-------------------------------------------------------------------------------
+
+Negocio: "Rezas Sagradas". Um funil de vendas de produtos digitais devocionais
+catolicos/cristaos, vendidos por PIX, com trafego pago (Google Ads).
+
+A promessa central: a pessoa responde um quiz espiritual de 9 perguntas sobre a
+propria vida (protecao da familia, dinheiro, inveja, sinais recentes), o sistema
+"analisa o merecimento" dela numa tela de calculo, e ao fim libera uma "Oracao
+Sagrada do Arcanjo Miguel" apresentada como personalizada para o momento de vida
+que ela mesma descreveu. A venda acontece numa VSL (video de vendas) ao final do
+quiz, com checkout PIX embutido na propria pagina.
+
+O publico e adulto, majoritariamente mais velho, de fe, comprando pelo celular,
+muitas vezes com pouca intimidade com tecnologia. Isso explica varias decisoes do
+projeto: PIX em vez de cartao, CPF pedido de forma explicita, textos sem jargao,
+alvos de toque grandes, tutorial em video no upsell.
+
+ESCADA DE PRODUTOS (precos reais, fonte da verdade em server/catalog.ts):
+
+  main         Oracao Sagrada do Arcanjo Miguel ................ R$ 47,00
+  salmos_150   Guia dos 150 Salmos (order bump) ................ R$ 27,00
+  vela_7dias   Vela Sagrada de 7 Dias (order bump) ............. R$ 14,90
+  upsell       Aplicativo Espiritual completo + tutorial ....... R$ 97,00
+  downsell     Aplicativo Espiritual - Versao Essencial ........ R$ 19,00
+
+  Ticket: R$ 47,00 (so o principal) ate R$ 185,90 (tudo, com upsell).
+  Com downsell no lugar do upsell: R$ 107,90.
+  O bump salmos_150 ja vem PRE-MARCADO: quem so aperta o botao paga R$ 74,00.
+
+  Ancoras riscadas na tela (precisam acompanhar os precos acima):
+    principal  de R$ 197,00 por R$ 47,00
+    upsell     de R$ 297,00 por R$ 97,00
+    downsell   de R$  97,00 por R$ 19,00   <- 80%, e o preco real do upsell
+
+  A PixGo recusa cobranca abaixo de R$ 10,00 (INVALID_AMOUNT). Vale para
+  downsell e upsell, que sao cobrados sozinhos; os bumps nao tem esse piso
+  porque so somam ao pedido principal. A maior cobranca desta escada e o
+  upsell, R$ 97,00 -- bem dentro do teto por QR, que comeca em R$ 300.
+
+  ESTA ESCADA MUDOU TRES VEZES EM 09/08/2026. Era 47/9,90/19,90/10; virou
+  27/10/47/14,90 de manha (commit 218fc3f); voltou para 47 e terminou o dia
+  como esta acima. O motivo da volta foi a VSL: a gravacao nova ("VSL 47")
+  anuncia R$ 47, e quem manda no preco do checkout e o que o video fala --
+  refazer a gravacao custa mais do que mudar um numero. Numeros de venda de
+  09/08 misturam as tres escadas e NAO devem ser comparados entre si.
+
+  Para nao errar de novo: scripts/testar-precos.mjs confere sozinho se a tela
+  ainda diz o que o servidor cobra, se as ancoras sao maiores que os precos e
+  se o selo de desconto do downsell fala a verdade. Roda em segundos.
+
+O CLIENTE / DONO: o repositorio nao registra o nome da pessoa ou da empresa
+dona da oferta. O que o codigo assume sobre ela (e vale confirmar por escrito):
+nao e programadora, opera o negocio pelo painel /admin no celular, anuncia no
+Google Ads (a pagina /obg existe so para ser o endereco de conversao da
+campanha), e quem responde clientes no WhatsApp quando o PIX nao entra. Todo
+texto de painel e de erro foi escrito na lingua dela: "Aguardando" e nao
+"pending", "O sistema de Pix recusou" e nao "gateway error 502".
+=> LACUNA A PREENCHER: nome do cliente, contato, dominio proprio, conta do
+   Google Ads e quem responde o WhatsApp. Nada disso esta no repositorio.
+
+
+-------------------------------------------------------------------------------
+2. COMO O FUNIL FUNCIONA, TELA POR TELA
+-------------------------------------------------------------------------------
+
+O funil inteiro e UMA pagina React que troca de etapa sem trocar de URL
+(src/App.tsx). A ordem real:
+
+   0     Hero - "Essa e a resposta que voce pediu em oracao"
+   1-6   Perguntas 1 a 6 do quiz (a q1 usa imagens proprias)
+   7     Intermissao de audio - "Irma Maria" fala com a pessoa
+   8-10  Perguntas 7 a 9
+  11     Depoimentos em video (Wistia)
+  12     Tela de calculo - "Analisando seu merecimento..."
+  13     VSL + oferta + checkout inline (OfferScreen)
+
+Atalhos de conferencia, so para quem digita a URL (o cliente que vem do anuncio
+sempre comeca do zero):
+  ?tela=13   abre direto na tela da oferta
+  ?cta=5     encurta a espera do botao de compra para 5 segundos
+
+TEMA "SACRED SHIELD" NAS TELAS 0 E 12 (10/08/2026). As duas pontas do quiz
+deixaram de ser claras e viraram telas escuras de sangria total, a partir de dois
+layouts entregues pelo dono (pastas "etapa 1" e "tela antes da vsl"):
+
+  Tela 0  src/components/HeroScreen.tsx - arte do Arcanjo ocupando 100svh,
+          titulo em Libre Caslon 48px, versiculo com filete dourado e botao em
+          capsula com gradiente de ouro. O rodape acompanha em preto. Nada
+          escrito no alto: o layout entregue trazia marca e "PREMIUM" sobre a
+          arte, e o dono mandou tirar - a tela tem uma acao so, e o rosto do
+          Arcanjo e o que precisa chegar primeiro.
+  Tela 12 src/components/LoadingScreen.tsx - ceu estrelado, aneis girando em
+          torno de um escudo e quatro verificacoes acendendo uma a uma. Saiu a
+          barra de porcentagem, o cartao de "Analise de Dignidade" e a imagem
+          arcanjo-loading.webp (que agora nao e usada em lugar nenhum).
+          ELA NAO ROLA: e a unica tela com altura travada em 100svh e overflow
+          escondido (ver `telaSemRolagem` em App.tsx). Tudo que ocupa altura e
+          medido em vh com piso e teto (clamp), entao o astrolabio encolhe em
+          aparelho baixo em vez de empurrar a lista para fora da dobra. Medido
+          em 5 alturas de 640 a 932 px: documento e janela dao o mesmo numero,
+          nada fica fora da tela.
+          A entrada e um efeito de rolagem: cada bloco sobe 56px com
+          `entrar-rolando`, escalonado de 100 em 100 ms. Os tempos se sobrepoem
+          de proposito, para o conjunto ler como UMA rolagem e nao como quatro
+          elementos piscando.
+
+A TELA 11 (DEPOIMENTOS) BAIXAVA 3,9 MB SEM NINGUEM PEDIR (corrigido em
+10/08/2026). Sao dois <wistia-player> lado a lado, e no padrao da Wistia cada um
+puxa o primeiro segmento de video assim que monta: 976 kB + 879 kB de .ts, mais
+o resto, em 33 pedidos. Em 4G de operadora dava uns 26 s olhando para dois
+retangulos pretos -- na tela que existe justamente para dar confianca.
+
+  A correcao e um atributo: preload="none" nos dois players (VideoPlayer.tsx).
+  Medido depois: 2,0 MB em 26 pedidos, ZERO byte de segmento de video. Cai 48%.
+  Conferido que o video AINDA TOCA ao apertar play (currentTime foi de 0 a 4 s,
+  estado "playing") -- esse era o risco da mudanca, e nenhum teste do repo
+  apertava o play.
+
+  O runtime do player continua carregando na tela 11 DE PROPOSITO: ele e
+  compartilhado com a VSL da tela 13, que vem logo depois (~5 s de tela 12).
+  Melhor pagar 1,9 MB de script enquanto a pessoa le depoimentos do que na tela
+  onde o video E a venda. NAO adie isso "para otimizar" sem medir a tela 13.
+
+scripts/testar-cta.mjs ESTAVA DANDO ALARME FALSO (corrigido em 10/08/2026). Os
+casos dividiam um contexto de navegador so. Desde que a tela passou a lembrar de
+quem ja cumpriu a espera (commit e2eab3c), o caso 1 -- que espera os 242 s ate o
+botao aparecer -- GRAVAVA a marca em localStorage, e todos os casos seguintes
+herdavam "essa pessoa ja esperou": o botao saia na hora e o teste reprovava
+"cta invalido: cai no padrao" por um motivo que nao existe no produto.
+Conferido em contexto limpo que o parsing sempre esteve certo.
+Agora cada caso ganha um contexto novo, e a memoria em si ganhou o teste que
+nunca teve (caso 2b).
+
+O SELO "ETAPA 1/10" FOI REMOVIDO (10/08/2026, a pedido do dono). O Header agora
+e so a barra de progresso de 4px. O selo gastava uma faixa inteira no alto do
+celular para dizer o que a barra ja mostra -- e ainda anunciava o tamanho da
+fila: ler "1/10" na primeira pergunta e descobrir que faltam nove. As props
+`currentStep` e `totalSteps` sairam junto.
+
+  O relogio da tela 12 nao mudou: ~5,4 s ate chamar a tela 13. Esse tempo e o que
+  faz a "analise" parecer analise.
+  As telas 1 a 11 continuam claras, em Plus Jakarta Sans - o tema novo e so das
+  duas pontas.
+  O ceu estrelado e gradiente CSS puro, nao imagem: a arte original do layout
+  vinha de uma URL temporaria do gerador de design, que expira sozinha e deixaria
+  a tela preta no minuto anterior a VSL.
+  HERO_DATA.headerTitle deixou de ser caixa alta: a 48px em Caslon, versal
+  estourava para cinco linhas em tela de 360px.
+
+O FUNIL INTEIRO E ESCURO (10/08/2026) -- ESTE E O PADRAO
+
+  O QUE E: as telas 1 a 11 e a 13 vestidas com a mesma paleta das telas 0 e 12.
+  Aprovado pelo dono no mesmo dia em que foi proposto. Quem chega pelo anuncio
+  ve o funil escuro.
+
+  Quem liga o tema e o data-tema="escuro" que ja vem no <html> do index.html --
+  no HTML estatico, e nao num efeito do React, para a regra valer antes da
+  primeira pintura. Posto pelo JavaScript, o funil piscava branco antes de
+  escurecer, na cara de quem abre o anuncio a noite.
+
+  ?tema=claro DEVOLVE A VERSAO CLARA ANTERIOR. Ela nao foi apagada: a paleta
+  clara inteira continua viva em src/index.css, e e o valor padrao de cada
+  token. Se o escuro converter pior, da para comparar as duas na mesma maquina
+  e no mesmo minuto, e voltar apagando um atributo do index.html.
+
+  COMO FOI FEITO (importa, porque muda como se mexe em cor daqui pra frente):
+  as ~230 cores fixas espalhadas pelos componentes viraram tokens por PAPEL, em
+  src/index.css -- `bg-fundo`, `text-texto`, `border-borda`, `bg-ouro`,
+  `bg-acao`. NAO ESCREVA HEXADECIMAL NOVO NOS COMPONENTES: uma cor fixa nao
+  acompanha o tema e vira a unica coisa clara numa tela preta. Se faltar um
+  papel, crie o token nos dois temas.
+  Os valores do tema claro sao os mesmos hexadecimais de antes -- por isso
+  ?tema=claro devolve exatamente o funil anterior, sem um pixel de diferenca.
+
+  As cores nomeadas do Tailwind (emerald/red/amber, ~55 usos de estado no
+  checkout) NAO foram reescritas: o v4 tambem as expoe como variaveis, e o tema
+  escuro redefine a escala invertida. `bg-emerald-50` continua igual no codigo e
+  vira verde-escuro sozinho.
+
+  DECISOES QUE NAO SAO ESTETICAS -- nao desfaca sem ler:
+   1. O QR DO PIX FICA BRANCO LITERAL (bg-white em PixPanel.tsx), fora do tema.
+      O codigo e preto sobre transparente; em fundo escuro nenhum leitor de banco
+      acha os modulos. E a imagem que faz o dinheiro entrar.
+   2. OS VERDES DE COMPRA NAO MUDAM. #278647 e o verde ja medido em 4.5:1 contra
+      texto branco. O chip do PIX deixou de usar emerald-600 e passou a usar esse
+      mesmo verde fixo, para o contraste ser igual nos dois temas.
+   3. O BOTAO PRIMARIO VIRA OURO NO ESCURO (token `acao`). Grafite sobre preto
+      some, e botao que some e etapa do funil que nao acontece.
+   4. O texto-guia dos campos do checkout ganhou contraste so no tema escuro:
+      `placeholder-suave/60` dava ~3:1 sobre o campo escuro, e e ele que diz o
+      que vai em cada campo.
+
+  O QUE NAO MUDOU: as fontes. Libre Caslon segue so nas telas 0 e 12; o miolo
+  continua em Plus Jakarta Sans, que e a fonte melhor de ler para este publico.
+  Trocar a tipografia do funil inteiro e outra decisao, ainda nao tomada.
+
+  CONFERIDO EM 10/08/2026: lint, testar-pixgo (28 casos), testar-precos (12),
+  responsividade em 6 larguras nos dois temas, compra inteira ate o painel do PIX
+  contra servidor em PIX_MODE=mock. Zero erro de console.
+
+O BOTAO DE COMPRA SO APARECE DEPOIS DE 4 MIN 20 S de tela aberta na VSL
+(OFFER_DATA.segundosAteOCta = 260, em src/data/funnelData.ts). Esse e o ponto do
+video em que a oferta e o preco sao ditos. Mostrar antes faz a pessoa clicar sem
+entender o que esta comprando e desistir no checkout. Se a edicao do video mudar,
+esse numero muda junto.
+
+Ao clicar em "Garantir minha vaga agora", abre o checkout embutido
+(src/components/InlineCheckout.tsx), que e uma maquina de estados:
+
+  form -> pix principal -> pago -> upsell -> pix do upsell -> (ou recusa)
+       -> downsell -> pix do downsell -> acesso liberado -> /obg
+
+  Campos: nome completo, e-mail, telefone com DDD (opcional), CPF (obrigatorio e
+  validado) + as duas caixas de order bump.
+  O pedido fica guardado no navegador: quem sai para o app do banco e volta
+  retoma de onde estava, em vez de gerar outra cobranca.
+  Upsell e downsell NAO pedem dados de novo - herdam tudo do pedido principal e
+  so existem se o principal estiver pago.
+
+A pagina /obg (public/obg.html) e o fim da linha: e o endereco que o Google Ads
+conta como conversao de compra, e por isso a ida para la acontece no FIM do
+checkout, nao na hora em que o PIX principal confirma - sair antes passaria por
+cima do upsell e do downsell e apagaria essa receita. A /obg tambem repete os
+acessos comprados, para o cliente nao perder a tela que lista o que comprou.
+
+
+-------------------------------------------------------------------------------
+3. COMO O DINHEIRO ENTRA (GATEWAY PIXGO)
+-------------------------------------------------------------------------------
+
+Gateway: PixGo (https://pixgo.org/api/v1), autenticado por uma chave so, no
+cabecalho X-API-Key. Todo o contato com ele esta em server/pix.ts - o resto do
+sistema so conhece createPayment e fetchPaymentStatus. Trocar de provedor de
+novo e reescrever esse arquivo (ja foi feito uma vez: antes era BitFlow Pay).
+
+FATOS DA PIXGO QUE MUDAM O COMPORTAMENTO DO FUNIL (nao se descobre lendo o
+codigo, e cada um deles ja custou tempo):
+
+ 1. NAO EXISTE AMBIENTE DE TESTE. Toda chave e de producao e toda cobranca
+    criada e dinheiro de verdade. Por isso existem dois substitutos: PIX_MODE=
+    mock (confirma sozinho em ~12 s, NUNCA use em producao) e o script
+    scripts/testar-pixgo.mjs, que sobe uma PixGo falsa local.
+ 2. O VALOR VAI EM REAIS DECIMAIS, nao em centavos como no resto do sistema.
+    Mandar 4700 criaria uma cobranca de quarenta e sete mil reais.
+ 3. MINIMO DE R$ 10,00 por cobranca. Teto por QR depende do NIVEL da conta:
+    comeca em R$ 300 e sobe ate R$ 6.000 conforme o total ja confirmado. Acima
+    do nivel, quem recusa e a API (LIMIT_EXCEEDED).
+ 4. O CPF INFORMADO TRAVA QUEM PODE PAGAR. Se outra pessoa pagar o QR, a PixGo
+    rejeita e o estorno para o terceiro leva ate 48 h. O checkout pede "CPF de
+    quem vai pagar" por isso, nao por preciosismo.
+ 5. A VALIDACAO DE CPF DELES E MAIS DURA QUE A NOSSA. Nos conferimos o digito
+    verificador; eles consultam a Receita Federal. CPF plausivel mas inexistente
+    passa por nos e e barrado la. As mensagens de erro deles (metade em ingles)
+    sao traduzidas antes de chegar ao cliente.
+ 6. AS DUAS DOCUMENTACOES DELES SE CONTRADIZEM. O que fizemos: aceitamos os dois
+    segredos possiveis de assinatura (whsec_ e pk_), as duas formas de payload
+    (campos na raiz e dentro de "data") e os quatro eventos.
+ 7. CONSULTAMOS /payment/{id} (10.000 req/24h) e NAO /payment/{id}/status
+    (1.000 req/24h). O de status tem teto dez vezes menor; estoura-lo seria
+    parar de confirmar pagamento de quem ja pagou.
+ 8. /payment/{id} responde 410 GONE nos estados finais, com o mesmo corpo do
+    200. Tratamos 410 como resposta valida.
+ 9. A PIXGO DESISTE DO WEBHOOK EM ~10 S e reenvia. Por isso a consulta feita
+    dentro do callback tem teto de 6 s, e nao os 15 s padrao.
+
+CONFIRMACAO DE PAGAMENTO - duas redes, nesta ordem:
+
+  a) Webhook em /api/webhooks/pix, com duas barreiras:
+     - assinatura HMAC-SHA256 sobre timestamp + "." + corpo cru, comparada em
+       tempo constante, carimbo fora de 5 minutos recusado;
+     - NADA do corpo e tratado como verdade, nem depois da assinatura conferir:
+       dele sai so o id da cobranca, e o status vem de consulta nossa a API.
+       Um POST forjado dizendo "completed" nao libera produto nenhum.
+  b) Consulta de status: o navegador pergunta ao nosso backend a cada 4 s, e o
+     backend so repassa a pergunta a PixGo no maximo 1x a cada 25 s por pedido,
+     dentro de um orcamento diario (5.000). O consumo do dia aparece em
+     GET /api/health.
+
+  Status desconhecido cai em PENDENTE, que e o lado seguro. MED (Mecanismo
+  Especial de Devolucao do PIX) e analise de devolucao, nao devolucao
+  consumada: nao revoga acesso de quem pagou nem libera nada de quem nao pagou.
+  O FRONTEND NUNCA DECIDE QUE UM PAGAMENTO ACONTECEU - quem libera e o servidor.
+
+
+-------------------------------------------------------------------------------
+4. O QUE JA ESTA PRONTO
+-------------------------------------------------------------------------------
+
+FUNIL (src/)
+  [x] 14 telas, quiz de 9 perguntas, audio, depoimentos, tela de calculo, VSL
+  [x] Imagens proprias comprimidas (3,7 MB -> 260 KB)
+  [x] Botao de compra segurado por 4min20, contado pelo relogio real (aba em
+      segundo plano nao atrapalha)
+  [x] Atalhos ?tela= e ?cta= para conferir telas sem refazer o quiz
+  [x] Responsividade auditada em 6 tamanhos de tela, de iPhone SE 320px ao
+      notebook: sem estouro horizontal, campos com 16px (senao o iOS da zoom
+      sozinho), alvos de toque de 44x44
+
+CHECKOUT (src/components/InlineCheckout.tsx + PixPanel + useOrderStatus)
+  [x] Formulario com validacao de CPF, e-mail e telefone
+  [x] Order bumps, upsell e downsell encadeados
+  [x] QR Code desenhado na tela + copia-e-cola
+  [x] Retomada do pedido de quem voltou do app do banco
+  [x] Erros da PixGo traduzidos para portugues comum
+
+BACKEND (server/, api/)
+  [x] Express inteiro rodando como UMA funcao serverless na Vercel
+  [x] Precos calculados so no servidor (o navegador manda IDs, nunca valores)
+  [x] Webhook assinado, com dedupe e janela anti-replay
+  [x] Reconciliacao com intervalo minimo e orcamento diario
+  [x] Postgres (Neon) em producao; arquivo local so em desenvolvimento
+  [x] Rate limit na criacao de cobranca, reaproveitamento de cobranca pendente
+      identica por 10 minutos
+  [x] Entrega dos produtos por links configuraveis (painel ou variaveis)
+
+PAINEL /admin (public/admin.* + server/routes/admin.ts + server/painel/)
+  [x] Login por senha, sessao assinada, bloqueio por senhas erradas
+  [x] Aba Pedidos (lista, detalhes, marcar manualmente, verificar pendentes)
+  [x] Aba Entregas (trocar link sem deploy, com historico e teste do link)
+  [x] Aba Webhooks (todo callback recebido vira linha, inclusive os ignorados)
+  [x] Aba Pagamentos (saude do gateway, consumo do orcamento de consultas)
+  [x] Link de entrega assinado, valido por 72 h
+
+PAGINA /obg
+  [x] Endereco de conversao do Google Ads, com os acessos repetidos
+
+TESTES (scripts/, todos rodados a mao, nenhum em CI)
+  [x] testar-pixgo.mjs ............. 24/24 contra uma PixGo falsa local
+  [x] testar-responsividade.mjs .... 6/6 telas
+  [x] testar-pagina-obrigado.mjs ... 8/8 (compra inteira em modo mock)
+  [x] testar-cta.mjs ............... 12/12 (relogio do botao de compra)
+      Os tres ultimos precisam do Playwright instalado FORA do projeto:
+        mkdir ~/teste-funil && cd ~/teste-funil
+        npm i playwright && npx playwright install chromium
+        PLAYWRIGHT_DIR=~/teste-funil node scripts/testar-cta.mjs <url> 260
+
+PRODUCAO (conferido em 07/08/2026)
+  https://rezassagradas.vercel.app/api/health respondeu:
+    status ok | mode live | storage postgres | webhookConfigured true
+  /obg responde 200, /admin responde 200, /leads responde 404 (ver secao 6).
+
+
+RASTREAMENTO DO META (feito em 08/08/2026, DESLIGADO ate ter credencial)
+  [x] Captura de origem no navegador (utm_*, fb_*, fbclid, gclid, _fbp, _fbc),
+      guardada no localStorage por 30 dias
+  [x] Pixel no navegador + API de Conversoes no servidor, com o MESMO event_id
+  [x] POST /api/track: lista branca de eventos, sem valor em dinheiro, 204 sempre
+  [x] Purchase enviado PELO SERVIDOR quando o pagamento e confirmado
+  [x] Carimbo do anuncio grudado no pedido; upsell e downsell herdam
+  [x] Tabelas eventos_funil (caminho no funil) e eventos_meta (auditoria)
+  [x] Aba Anuncios no /admin: visitas -> quiz -> VSL -> checkout -> Pix ->
+      vendas -> receita, por campanha, conjunto ou anuncio, com investimento
+      digitado a mao e retorno calculado
+  [x] Investimento importado de uma Google Sheet publicada em CSV (Stract e
+      afins), com a coluna Investido se preenchendo sozinha
+  [x] Pixel, token e codigo de teste editaveis em /admin -> Anuncios ->
+      Credenciais do Meta. Valem na hora, sem deploy. O token vai cifrado
+      (AES-256-GCM com chave derivada da PAINEL_CHAVE_MESTRA) e nunca volta
+      inteiro para a tela. Botao "Testar conexao" fala com o Meta sem registrar
+      evento nenhum.
+  [x] scripts/testar-rastreamento.mjs: 109 casos com PixGo, Meta e planilha falsos
+  [ ] FALTA (nao e codigo): dominio proprio, conjunto de dados no Gerenciador de
+      Eventos, token da API de Conversoes, verificacao de dominio, Eventos
+      Agregados e os parametros de URL no anuncio. Ver a secao 6.
+
+-------------------------------------------------------------------------------
+5. ONDE PARAMOS EXATAMENTE
+-------------------------------------------------------------------------------
+
+NO AR DESDE 10/08/2026, 23h15 (horario de Brasilia) -- deploy
+rezassagradas-44mr90c6s. Duas frentes subiram juntas: a tela do PIX e a aba
+Anuncios (as duas descritas abaixo).
+
+CONFERIDO EM PRODUCAO, logo apos subir:
+  /api/health            mode=live, storage=postgres, webhook=true,
+                         pixel=1907363626541719, capi=true
+  bundle servido         contem o tutorial novo ("Nunca pagou com PIX")
+  /?tela=13              abre, checkout abre, zero estouro horizontal, zero
+                         erro de console
+  /admin/anuncios?dias=1 periodo = 10/08 00h00 (03:00Z) ate agora, com
+                         diaDeHoje=2026-08-10 as 23h14 -- exatamente o horario
+                         em que o calculo antigo ja apontaria para o dia 11
+  funil em producao      337 visitas -> 160 quiz -> 154 VSL -> 77 checkout ->
+                         12 Pix -> 3 vendas. Decrescente do inicio ao fim, que
+                         era o defeito relatado
+  a consulta nova        `chaveDasSessoes` (o array `ANY($1::text[])`, unico
+                         trecho que nao dava para testar sem Postgres) RODOU
+                         de verdade: ha 7 pedidos sem carimbo na base e o log
+                         da Vercel nao registrou "Falha ao recuperar a origem".
+                         O ponto em aberto anotado antes esta resolvido.
+
+  A tela do PIX em producao NAO foi exercitada ate o fim de proposito: gerar
+  cobranca ali e dinheiro de verdade. O comportamento dela foi medido contra a
+  PixGo falsa; em producao conferiu-se que o codigo servido e o novo.
+
+O GASTO EM ANUNCIO AGORA VEM DO META SOZINHO (11/08/2026).
+
+  A aba Anuncios sempre soube quanto ENTROU; o quanto SAIU dependia de o dono
+  digitar todo dia ou manter uma planilha publicada. Sem esse numero nao existe
+  ROAS, CPA nem lucro -- so faturamento, que e o numero que faz escalar anuncio
+  no prejuizo. Agora ha uma terceira via, e e a unica que nao depende de alguem
+  lembrar: server/metaAnuncios.ts fala com a API de Marketing e traz `spend`,
+  `impressions` e `clicks` por dia.
+
+  O QUE PRECISOU SER RESOLVIDO ANTES: o mesmo dinheiro aparece TRES vezes no
+  Gerenciador -- por campanha, por conjunto e por anuncio. Importamos os tres,
+  para a coluna Investido existir em qualquer agrupamento que o dono escolher,
+  e por isso a tabela investimento_anuncios ganhou a coluna `nivel`. Sem ela os
+  tres se somariam e o painel mostraria o TRIPLO do gasto real: o ROAS
+  apareceria a um terco, e a decisao que sai disso e desligar um anuncio que
+  estava lucrando. A digitacao a mao tambem passou a informar o nivel da tabela
+  que esta na tela.
+
+  O TOKEN NAO E O MESMO DA API DE CONVERSOES. Aquele escreve evento; este
+  precisa de `ads_read`, que le a conta. Os dois sao colados no painel
+  (Anuncios -> Configuracao) e guardados cifrados com a PAINEL_CHAVE_MESTRA. O
+  token de anuncios NUNCA volta para a tela, nem mascarado -- a tela so sabe se
+  existe. Recomendado gerar por um usuario do sistema no Business Manager,
+  porque esse token nao expira.
+
+  AGENDAMENTO: `crons` no vercel.json chama GET /api/cron/investimento as 06:10
+  UTC (03:10 em Brasilia), depois de o dia fechar e antes de o dono acordar. A
+  rota exige `Authorization: Bearer <CRON_SECRET>`, comparado em tempo
+  constante, e responde 404 para quem nao tem -- inclusive quando a variavel nao
+  esta configurada. Ela reimporta SETE dias, nao um: o Meta revisa numeros ja
+  fechados por ate 72 h, e a janela maior faz o painel acompanhar a correcao
+  sozinho.
+
+  DUAS DECISOES QUE PARECEM ERRO E NAO SAO:
+  - o cron responde 200 mesmo quando a importacao falha. O agendador da Vercel
+    desativa o que falha sempre, e enquanto o dono nao tiver colado o token --
+    o estado normal no primeiro dia -- a rotina seria desligada justamente
+    antes de servir para alguma coisa. A resposta traz `importado: false`.
+  - o total conferido depois de importar soma so o nivel de campanha. Somar os
+    tres daria tres vezes o gasto.
+
+  Testado: scripts/testar-investimento-meta.mjs, 33 casos, contra um Graph
+  falso local -- nenhuma chamada sai para o Meta de verdade. Ele cobre o total
+  triplicado (o estrago mais caro), o token que nunca volta para a tela, a
+  reimportacao que nao duplica, as mensagens de erro em portugues e o cron
+  fechado sem segredo.
+
+  NO AR (deploy rezassagradas-8etqvinoe) e conferido em producao:
+    - a secao nova aparece em Anuncios -> Configuracao, sem erro de console;
+    - GET /api/cron/investimento sem segredo .......... 404
+    - com segredo errado ............................. 404
+    - com o segredo certo ............................ 200, importado:false,
+      motivo NAO_CONFIGURADO ("Falta a conta de anuncios ou o token")
+  A variavel CRON_SECRET foi criada na Vercel (Production, Sensitive) em
+  11/08/2026. Ela e write-only la, como a ADMIN_SENHA: se for perdida, o
+  caminho e remover e criar outra --
+  `npx vercel env rm CRON_SECRET production --yes` e depois
+  `printf '<novo>' | npx vercel env add CRON_SECRET production`, seguido de
+  deploy. ATENCAO ao criar: `$valor | npx vercel env add` no PowerShell grava
+  uma quebra de linha junto e a Vercel RECUSA O DEPLOY inteiro com "contains
+  leading or trailing whitespace". Use printf pelo bash.
+
+  FALTA SO O DONO COLAR a conta (act_...) e o token com ads_read em Anuncios ->
+  Configuracao. Ate la nada muda: o gasto continua entrando a mao ou por
+  planilha, e o cron registra no log que nao tinha o que importar.
+
+A ABA FUNIL FOI CONSTRUIDA (11/08/2026). Ela era um paragrafo dizendo "depende
+do rastreador, que entra na proxima etapa" -- e era ISSO que o dono estava
+pedindo quando falou em "concluir essa etapa".
+
+  O QUE FALTAVA NAO ERA A TELA, ERA O DADO. O funil disparava tres marcos
+  (entrou, terminou o quiz, viu a VSL) e mais nada. Entre entrar e terminar o
+  quiz existem ONZE telas, e elas eram um buraco so: nao havia como saber em
+  qual pergunta as pessoas desistem, que e a unica pergunta que essa aba existe
+  para responder. Nao da para consertar a tela que espanta a pessoa sem antes
+  saber qual e.
+
+  Entao a construcao foi em duas partes:
+
+  1. INSTRUMENTACAO. src/App.tsx passou a mandar `EtapaDoFunil` a cada tela
+     nova (1 a 11), uma vez por etapa por sessao -- o Set impede que o botao
+     "Voltar" conte a mesma pessoa duas vezes. O evento fica SO no nosso banco,
+     como os de recuperacao: no Meta, nome fora do padrao vira conversao
+     personalizada e o robo de otimizacao passaria a mirar em quem navega.
+     Custo medido: uma visita inteira vai de 6 para 17 requisicoes curtas; quem
+     desiste na segunda pergunta gera tres.
+
+  2. AGREGACAO E TELA. `resumoDoFunil` no repositorio (Postgres com uma CTE por
+     sessao, e o espelho em memoria), rota GET /api/admin/funil e a aba. O
+     acumulado "quem chegou ate aqui" e montado em JS por
+     `montarResumoDoFunil`, compartilhado pelas duas implementacoes -- quando
+     elas divergem, quem descobre e o dono olhando numero errado em producao.
+
+  O QUE A ABA MOSTRA: pessoas no site, quem chegou na oferta, Pix gerados,
+  pagos, conversao visita->venda, do Pix ao pagamento, medianas de tempo (nunca
+  media: uma aba esquecida aberta destroi a media), o funil tela por tela com a
+  MAIOR QUEDA em vermelho, o fluxo do checkout e quem parou ha mais de 30 min
+  sem pedido pago.
+
+  A verdade financeira continua vindo dos PEDIDOS, nunca dos eventos: o
+  navegador some quando o cliente vai pagar no app do banco.
+
+  Testado: scripts/testar-painel-funil.mjs, 32 casos. A primeira metade fala com
+  o repositorio direto porque duas contas nao passam pela API -- o abandono
+  precisa de eventos com mais de 30 min, e pela rota o carimbo e sempre "agora".
+
+  NO AR e conferida em producao (deploy rezassagradas-n1fjeak1a). O QUE ELA
+  MOSTROU NO PRIMEIRO OLHAR, em 30 dias:
+
+    653 pessoas no site -> 243 chegaram na oferta -> 31 geraram o Pix -> 4 pagaram
+    visita ate a venda ... 0,6 %
+    do Pix ao pagamento .. 12,9 %   <- 27 de 31 geraram o Pix e NAO pagaram
+    ate chegar na oferta . 3 min (mediana)
+    ate gerar o Pix ...... 14 min (mediana)
+    parados: 402 na entrada, 215 na oferta, 6 na analise, 1 na pergunta 9
+
+  O buraco nao esta no quiz: esta DEPOIS do Pix gerado. Nove em cada dez pessoas
+  que pediram o codigo nao pagaram -- gente que ja escolheu o produto, digitou
+  nome, e-mail e CPF e chegou a ver o QR. E o publico exato da mensagem de
+  recuperacao que subiu no mesmo dia, e a primeira coisa a acompanhar depois
+  dela: se a mensagem funcionar, e esse 12,9 % que sobe.
+
+  A queda de 653 para 250 na primeira pergunta e o segundo ponto, mas ainda nao
+  da para dizer que a culpa e da pergunta 1 -- e o periodo anterior a medicao
+  tela a tela, e a tela avisa isso.
+
+  PENDENCIA CONHECIDA, PREEXISTENTE: o painel tem 31 px de estouro horizontal em
+  tela de 390 px, em TODAS as abas (medido em Pedidos, Anuncios e Funil). A
+  origem e o cabecalho -- os botoes Tema/Atualizar/Sair. Nao foi mexido aqui
+  porque afeta o painel inteiro e merece uma passada propria, com bateria de
+  responsividade para o /admin, que ainda nao existe.
+
+ARMADILHA DA DOCUMENTACAO: O RELOGIO DO CTA E 242 s, NAO 226 (achado em
+11/08/2026).
+
+  `segundosAteOCta` mudou de 226 para 242 na troca da gravacao da VSL, mas o
+  comando no CLAUDE.md continuou mandando rodar
+  `testar-cta.mjs <url> 226`. Quem seguisse a receita reprovava um relogio que
+  estava certo -- e a falha aparece no unico caso que mede o comportamento do
+  cliente de verdade ("SEM parametro: o botao aparece depois dos N s"), o que
+  faz parecer defeito grave. Medido: o botao aparece aos 244 s (242 + a folga de
+  medicao). CLAUDE.md e CRIATIVOS.md corrigidos.
+
+MENSAGEM DE RECUPERACAO DE COMPRA (11/08/2026) -- NO AR, deploy
+rezassagradas-jianf8lj4.
+
+  CONFERIDO EM PRODUCAO logo apos subir, com o cuidado de nao gerar cobranca
+  (o gateway e de producao e toda cobranca e dinheiro de verdade):
+    - o bundle servido traz a mensagem, a oracao e os dois eventos novos;
+    - quem chega pelo anuncio continua caindo no HERO, nao na oferta -- este
+      era o risco real da entrega: se a mudanca do passo inicial vazasse para
+      cliente novo, o quiz inteiro seria pulado e as vendas cairiam sem nenhum
+      erro aparecer;
+    - a mensagem NAO aparece para quem nunca pediu nada;
+    - o botao de compra continua esperando o tempo da VSL e o checkout nao abre
+      sozinho;
+    - zero erro de console, zero estouro horizontal.
+
+
+  Quem gera o PIX e nao paga na hora agora encontra uma mensagem ao voltar --
+  "Sua oracao ainda esta esperando por voce" --, com a oracao de Sao Miguel, o
+  valor que continua reservado e um botao que desce ate o QR Code.
+  Componente: src/components/ConviteDeRetomada.tsx.
+
+  A MUDANCA QUE FAZ ELA EXISTIR NAO E A MENSAGEM, E O CAMINHO DE VOLTA. O passo
+  do funil nunca foi persistido: quem recarregava caia no hero e, para concluir
+  o pagamento, teria de responder as nove perguntas de novo. Na pratica ninguem
+  fazia isso -- era abandono acontecendo DEPOIS de a pessoa ja ter decidido
+  comprar e digitado o CPF. Agora, havendo pedido guardado no navegador:
+
+    - App.tsx abre o funil direto na tela 13 (o ?tela= continua vencendo);
+    - OfferScreen ja monta com o checkout aberto, sem pedir para assistir a VSL
+      e apertar o botao de compra outra vez;
+    - InlineCheckout rola ate a mensagem, e nao ate o QR: quem volta precisa
+      ler o convite antes: o botao dele leva ao pagamento num toque;
+    - a restauracao de rolagem do navegador foi desligada (history
+      .scrollRestoration = 'manual'). Sem isso o recarregamento devolvia a
+      pessoa a altura antiga -- no meio do checkout, abaixo da mensagem.
+
+  A rolagem tenta tres vezes (150, 600 e 1200 ms) e para assim que acerta: o
+  player da VSL so reserva altura quando carrega, e uma passada unica acertava
+  o alvo antes de o video empurrar tudo para baixo.
+
+  RASTREAMENTO. Dois eventos novos, `RecuperacaoVista` e `RecuperacaoClique`,
+  que ficam SO no nosso banco. Nao vao para o Meta de proposito: la, nome fora
+  da lista padrao vira "evento personalizado" e entra no gerenciador ao lado das
+  conversoes que valem dinheiro -- e o robo de otimizacao passaria a mirar em
+  quem ve avisos em vez de quem compra. Eles tambem nao tem degrau em
+  ESTAGIO_DO_EVENTO, entao nao mexem nas colunas do funil.
+
+  Testado: scripts/testar-retomada.mjs (novo, 23 casos -- e o primeiro deles
+  verifica a AUSENCIA da mensagem para quem acabou de gerar o PIX, que e o erro
+  mais caro possivel aqui), testar-rastreamento.mjs 116/116 com os quatro casos
+  novos, testar-tela-pix.mjs 31/31, testar-responsividade.mjs OK nas seis telas,
+  testar-pagina-obrigado.mjs 8/8, testar-prova-social.mjs 6/6.
+
+  O QUE ESTA MENSAGEM NAO E: um e-mail. Recuperacao por e-mail continua no
+  ROADMAP e depende do cron, que ainda nao existe. Esta aqui alcanca quem volta
+  ao site pelo mesmo navegador -- que e a maior parte de quem sai para o app do
+  banco e se perde no caminho, mas nao e todo mundo.
+
+O QUE SUBIU, PARTE 1 -- A TELA DO PIX FOI REENQUADRADA:
+
+  A ordem na tela era QR Code -> tutorial de cinco passos -> codigo copia e cola
+  -> botao de copiar. No celular isso obrigava quem paga pelo mesmo aparelho (a
+  maioria) a atravessar o tutorial inteiro para chegar na unica acao que
+  importa. Agora e QR -> "Pix Copia e Cola" -> codigo -> botao -> confirmacao,
+  e o tutorial (agora com os sete passos que o dono ditou, do "abra seu banco"
+  ate o "confirme o pagamento") vem DEPOIS, para quem precisar dele.
+
+  Junto:
+  - o campo do codigo perdeu o `max-h-24 overflow-y-auto` que o cortava dentro
+    de uma caixinha com rolagem propria; agora aparece inteiro, e um toque longo
+    seleciona tudo (`select-all`);
+  - o QR virou `aspect-square` com largura relativa (176-240 px) em vez de 192 px
+    fixos: nao distorce e nao encosta na borda em tela de 320 px;
+  - o botao de copiar tem 56 px de altura e diz so "Copiar codigo";
+  - a copia ganhou plano B. `navigator.clipboard` nao existe fora de HTTPS e e
+    recusada nos navegadores embutidos do Instagram e do Facebook -- por onde
+    este publico chega. Agora tenta `execCommand` depois, e se as duas falharem
+    a tela DIZ isso e ensina a segurar o dedo no codigo. Antes o erro era
+    engolido: a pessoa ia para o banco achando que tinha copiado;
+  - "Ja paguei -- verificar agora" e "Quero mudar meu pedido" tinham 42 px e
+    28 px de altura; foram para 44 px, o minimo que o dedo acerta;
+  - ao gerar o PIX a tela ROLA sozinha ate o QR (pedido do dono). Antes o QR
+    nascia abaixo da dobra e a pessoa ficava olhando o formulario.
+
+  Testado com o servidor em PIX_MODE=mock: scripts/testar-tela-pix.mjs (novo,
+  31 casos -- ordem dos elementos, QR nao distorcido, codigo igual ao do
+  gateway, copia de verdade para a area de transferencia, os sete passos e o
+  que nao podia sumir), testar-responsividade.mjs agora com a etapa "pix" e
+  OK nas seis telas (320 a 1280), testar-pagina-obrigado.mjs 8/8 (o fluxo
+  inteiro ate /obg), testar-prova-social.mjs 6/6, testar-pulso.mjs 8/8,
+  testar-pixgo.mjs 28/28 e testar-precos.mjs 12/12.
+
+  ARMADILHA DO AMBIENTE DE TESTE, que custou meia hora: com DATA_DIR apontando
+  para uma pasta, o orders.json fica NA RAIZ dela, nao em .data/. Reiniciar o
+  servidor sem apagar esse arquivo faz o checkout reaproveitar um pedido antigo
+  cujo pagamento falso ja nao existe na memoria do processo -- e a cobranca
+  nunca se confirma. O sintoma e a bateria da /obg travando em "esperando o
+  upsell", que parece defeito no funil e nao e.
+
+O QUE SUBIU, PARTE 2 -- A ABA ANUNCIOS FOI CONSERTADA:
+
+  e49eff8  Faz o periodo Hoje ser hoje e o funil parar de inverter
+  0ab5157  Explica na legenda que o funil e cumulativo
+  600639c  Reenquadra a tela do PIX (parte 1, acima)
+
+  O que mudou, e por que os numeros da tela vao mudar de valor:
+
+  a) PERIODO. Era janela deslizante de N x 24 h medida em UTC. "Hoje" as 10 h
+     da manha somava metade de ontem; depois das 21 h, quando o UTC vira, o
+     gasto anotado no dia caia fora do proprio recorte -- era essa a queixa
+     "poe para hoje e nao vem a data de hoje". Agora o dia comeca a meia-noite
+     em Sao Paulo (server/periodo.ts), "7 dias" e hoje mais seis, e o corte do
+     investimento usa o mesmo dia-calendario que a tela mostra. O periodo
+     anterior e cortado no mesmo horario (hoje ate as 10 h contra ontem ate as
+     10 h), senao toda manha pareceria queda. O painel tambem parou de decidir
+     que dia e hoje pelo relogio do celular: quem diz e o servidor.
+
+  b) FUNIL. Contava sessoes distintas por EVENTO, e por isso invertia: um
+     PageView perdido tirava a pessoa de Visitas e a deixava em Quiz. Agora e
+     por sessao, pelo degrau mais alto alcancado, e cumulativo -- quem abriu o
+     checkout conta em VSL, Quiz e Visitas. Junto vieram: chave do anuncio
+     consolidada por sessao (carimbo que some no meio da visita nao parte a
+     pessoa entre a campanha e "(sem origem)"), Lead e AddPaymentInfo contando
+     como checkout, e o pedido sem carimbo recuperando a origem pelo
+     order.trackId. firmarFunil() fecha a ordem de baixo para cima: uma venda
+     prova que houve checkout, VSL, quiz e visita.
+
+     CONSEQUENCIA PARA QUEM COMPARA DIAS: as colunas Quiz, VSL e Checkout vao
+     SUBIR em relacao ao que a tela mostrava antes. Nao e trafego novo, e o
+     mesmo trafego contado direito. Nao compare 10/08 para tras com 11/08 para
+     frente nessas colunas.
+
+  Rodado antes de commitar: npm run lint limpo, npm run build limpo,
+  scripts/testar-painel-anuncios.mjs 78/78 (12 casos novos de fuso e periodo,
+  13 de funil invertido) e scripts/testar-rastreamento.mjs 112/112.
+
+  A consulta nova `chaveDasSessoes` usa `session_id = ANY($1::text[])` -- o
+  primeiro array como parametro deste repositorio, e o unico trecho que as
+  baterias nao alcancam (elas rodam no repositorio em memoria, e nao ha
+  DATABASE_URL local). Ela esta dentro de try/catch em server/routes/admin.ts
+  justamente por isso: se o driver do Neon recusar o array, o log registra
+  "Falha ao recuperar a origem pela sessao do funil", a venda sem carimbo volta
+  para "(sem origem)" como era antes, e a tela NAO cai.
+  => CONFERIDO EM PRODUCAO em 10/08/2026: com 7 pedidos sem carimbo na base, a
+     consulta rodou e o log nao trouxe essa linha. O array funciona no Neon.
+
+O que estava no ar antes disso: 09/08/2026, as 11h08 (horario de Brasilia).
+
+  218fc3f  Ajusta a escada de precos, troca a VSL e afina o checkout
+  f7ec729  Poe os botoes de compra para pulsar
+
+ATENCAO -- ESTES DOIS COMMITS FICARAM UM DIA SEM SUBIR. A producao rodou de
+08/08 05h54 ate 09/08 11h08 com a escada de precos ANTIGA (principal a R$ 47,
+upsell a R$ 19,90) enquanto o codigo local ja tinha a nova. Quem olhar numeros
+de venda desse intervalo precisa saber disso antes de comparar com hoje.
+
+ONDE O SITE RODA, E POR QUE NAO NA HOSTINGER (decidido em 10/08/2026).
+
+  A aplicacao roda na VERCEL. A Hostinger e apenas a REGISTRADORA do dominio
+  rezassagradas.site -- o DNS de la aponta para ca (A 76.76.21.21 e
+  www -> cname.vercel-dns.com). E facil confundir as duas coisas, e vale ter
+  isso escrito: perguntaram por "deploy na Hostinger" achando que o site
+  estivesse hospedado la.
+
+  Ha um plano Business Web Hosting na conta Hostinger, com a pasta do
+  rezassagradas.site VAZIA e zero build de Node. O dono avaliou migrar e
+  decidiu FICAR NA VERCEL. Os motivos, para nao reabrir a discussao do zero:
+
+    - o plano esta como nao-renovavel e vence em 08/09/2026;
+    - este app e Express + Postgres, nao site estatico: exigiria Node
+      persistente na hospedagem compartilhada;
+    - todas as variaveis teriam de ser recriadas, com atencao a
+      PAINEL_CHAVE_MESTRA -- troca-la invalida os links de entrega ja enviados
+      a quem comprou;
+    - o pior risco e o WEBHOOK DA PIXGO: e ele que confirma pagamento e libera
+      o produto, e o endereco dele e configurado no painel da PixGo, fora deste
+      repositorio. Migrar sem trocar o webhook na janela certa e cliente
+      pagando e nao recebendo.
+
+O deploy e feito pelo Vercel CLI (npx vercel --prod). O repositorio HOJE TEM
+remote (github.com/euomarjorge-star/rezas-sagradas-funil-arcanjo-miguel), ao
+contrario do que este arquivo dizia antes -- mas o remote nao publica nada: a
+Vercel nao esta ligada ao GitHub. Commitar e empurrar continua NAO publicando.
+Foi exatamente assim que os dois commits acima passaram um dia parados.
+
+Antes de publicar, o que foi rodado em 09/08/2026 e passou:
+  npm run lint                    sem erro
+  node scripts/testar-pixgo.mjs   28/28, com "manda o valor em REAIS (enviado:
+                                  27)" confirmando a escada nova
+
+Conferido em producao logo apos subir, em https://rezassagradas.vercel.app:
+
+  /api/health              mode=live, storage=postgres, webhookConfigured=true
+  /api/rastreamento/pixel  responde (pixelId vazio: credenciais ainda nao postas)
+  /api/track               aceita evento (204)
+  /admin                   abre (200)
+  logs da Vercel           "Postgres pronto (tabelas verificadas)" -- as tabelas
+                           novas (eventos_funil, eventos_meta, configuracoes,
+                           investimento_anuncios) foram criadas de verdade
+
+O QUE FALTA PARA O RASTREAMENTO COMECAR A MEDIR (2 minutos, e trabalho do dono):
+entrar em /admin -> Anuncios -> Credenciais do Meta, colar o ID do Pixel e o
+token da API de Conversoes, e apertar "Testar conexao". Nao precisa de deploy.
+=> JA FEITO: em 09/08/2026 o /api/health responde meta.pixelId=1907363626541719
+   e capiAtiva=true, nos dois dominios.
+
+PIXEL: DEU A VOLTA E TERMINOU ONDE COMECOU, EM 10/08/2026.
+  1907363626541719 -> 280397883093097 -> 2033877597487661 -> 280397883093097
+  -> 1907363626541719. QUATRO TROCAS NO MESMO DIA, todas a pedido do dono.
+  O QUE VALE E O 1907363626541719 -- o mesmo do inicio do dia.
+
+  Consequencia boa: o META_CAPI_TOKEN guardado no painel foi emitido para ESTE
+  conjunto, entao o lado servidor voltou a casar com o lado navegador sozinho.
+  Enquanto o pixel esteve nos outros tres numeros, o token continuou sendo o
+  deste -- se os eventos de servidor sumiram naquelas janelas, foi isso.
+
+  Consequencia ruim: o que foi medido em 10/08 esta repartido entre TRES
+  conjuntos (1907..., 280..., 2033...), cada um com o pedaco do dia em que
+  estava valendo. Nenhum deles conta o dia inteiro e somar os tres tambem nao
+  da o numero certo, porque as janelas se sobrepoem em sessao. NAO USE 10/08
+  como base de comparacao para nada.
+A troca e no PAINEL (/admin -> Anuncios -> Configuracao), que e o unico lugar
+onde esse numero existe: nao ha META_PIXEL_ID nas variaveis da Vercel e o bundle
+publicado nao traz VITE_META_PIXEL_ID. Vale na hora, sem deploy.
+
+  O CODIGO BASE DO META NAO ENTRA NO index.html. O dono colou o snippet oficial
+  pedindo a troca; so o numero foi aproveitado. Aquele snippet dispara
+  fbq('track','PageView') SEM eventID, e o nosso servidor manda o mesmo PageView
+  com identificador pela API de Conversoes -- sem o par, o Meta conta a visita
+  duas vezes e infla justamente o numero que o robo usa para decidir onde gastar
+  o dinheiro do anuncio. Quem dispara o PageView aqui e src/lib/rastreio.ts.
+  Conferido no navegador: fbq recebe init 280397883093097 e o PageView sai com
+  eventID de deduplicacao. Os eventos vao por POST (nao mais em query string),
+  entao filtro de rede por ?id=/?ev= na URL nao ve nada -- nao confunda isso com
+  pixel parado.
+  O TOKEN DA API DE CONVERSOES NAO FOI TROCADO. Token de CAPI e emitido por
+  conjunto de dados; se os eventos de servidor pararem de chegar no conjunto
+  novo, e isso. Gere um token no conjunto 280397883093097 e cole no painel.
+
+CUIDADO COM O BOTAO "TESTAR CONEXAO" DO PAINEL: ele nunca da verde. O
+conferirCredenciais (server/meta.ts) manda {data: []} de proposito, so para ver
+se autentica, e o Meta responde sempre "erro 100: param data must be non-empty".
+Isso NAO diz nada sobre o pixel ou o token estarem errados -- token invalido dÃ¡
+erro 190 e falta de permissao dÃ¡ 200; chegar no 100 significa que autenticou e
+resolveu o pixel. Vale arrumar a mensagem desse botao um dia, porque hoje ela
+assusta a toa.
+
+DOMINIO PROPRIO LIGADO EM 09/08/2026
+------------------------------------
+https://rezassagradas.site agora serve o mesmo projeto da Vercel. O que foi
+feito, nesta ordem (a ordem importa: DNS antes de registrar o dominio na Vercel
+faz o navegador receber erro de certificado):
+
+  1. rezassagradas.site e www adicionados ao projeto "rezassagradas" na Vercel
+     (npx vercel domains add <dominio> rezassagradas).
+  2. DNS trocado na Hostinger, que continua sendo o provedor de DNS:
+       A     @    76.76.21.21          (era 2.57.91.91, parking da Hostinger)
+       CNAME www  cname.vercel-dns.com (era rezassagradas.site.)
+     Os nameservers seguem na Hostinger de proposito -- e a opcao (a) que a
+     propria Vercel recomenda, e mantem a zona editavel pela API deles.
+  3. Conferido: /, /obg, /admin e /api/health respondem 200 no dominio novo,
+     com mode=live e storage=postgres, iguais ao antigo.
+
+O DOMINIO ANTIGO CONTINUA NO AR. rezassagradas.vercel.app nao foi desligado, e
+por isso nada quebrou: o webhook da PixGo, que aponta para la, segue recebendo.
+
+PENDENCIAS QUE ESSA MUDANCA CRIOU (nenhuma urgente, nenhuma quebra hoje):
+  [ ] PUBLIC_BASE_URL na Vercel ainda tem o endereco antigo. E dela que saem os
+      links de entrega assinados (72 h). Trocar faz os links novos nascerem no
+      dominio proprio; os ja emitidos continuam valendo, porque o .vercel.app
+      nao saiu do ar. Trocar exige redeploy.
+  [ ] Webhook da PixGo continua apontando para rezassagradas.vercel.app. So
+      mude junto com PUBLIC_BASE_URL, e conferindo no painel deles.
+  [ ] Google Ads: a URL de conversao /obg precisa passar a usar o dominio
+      proprio quando a campanha for reapontada.
+
+COMO DESFAZER (se precisar): voltar o A @ para 2.57.91.91 na Hostinger e rodar
+npx vercel domains rm rezassagradas.site. Nada no codigo foi tocado.
+
+INCIDENTE: O DOMINIO FICOU FORA DO AR NA MADRUGADA DE 10/08/2026
+----------------------------------------------------------------
+Entre 00h04 e ~09h de 10/08, https://rezassagradas.site NAO RESPONDIA. O
+rezassagradas.vercel.app continuou no ar o tempo todo, e por isso o webhook da
+PixGo (que aponta para la) seguiu confirmando pagamento -- mas quem clicou no
+anuncio nesse periodo viu uma tela que nao carregava.
+
+CAUSA: alguem ativou o "CDN da hospedagem" na Hostinger sobre esse dominio. O
+fluxo deles reescreveu a zona inteira sozinho, as 00h04:
+
+  @    A     76.76.21.21          ->  ALIAS  rezassagradas.site.cdn.hstgr.net
+  www  CNAME cname.vercel-dns.com ->  CNAME  www.rezassagradas.site.cdn.hstgr.net
+  (e criou um registro ftp que nao existia)
+
+Como o site mora na VERCEL e na Hostinger nao ha nada publicado (zero
+deployments no teste.rezassagradas.site), o dominio passou a apontar para um
+servidor vazio.
+
+CORRIGIDO restaurando o snapshot automatico 170871771, que a propria Hostinger
+tirou as 00h03:52 -- segundos antes da mudanca, com o estado bom. Conferido
+depois: /, /obg, /admin e www em 200, /api/health com mode=live e
+storage=postgres.
+
+COMO EVITAR: nao ativar CDN, "conectar dominio" nem "configurar e-mail gratis"
+na Hostinger para rezassagradas.site. Ela hospeda apenas a ZONA DNS deste
+dominio; o site e da Vercel. Qualquer botao no painel deles que prometa
+"acelerar" ou "proteger" o site tende a reescrever a zona para os servidores
+deles. O meupassaporte.org esta com o mesmo padrao de DNS (ALIAS para o CDN),
+mas nesse caso e coerente: ele e um addon domain que mora la mesmo -- so nao
+tem site publicado ainda.
+
+
+CARREGAMENTO DA TELA 0 (10/08/2026)
+-----------------------------------
+Os quatro scripts da Wistia sairam do <head> do index.html e passaram a ser
+injetados por src/lib/wistia.ts quando a pessoa sai do hero. Eram 60 kB e
+quatro conexoes com dominio de terceiro baixados na TELA 0, sendo que o
+primeiro video so aparece na tela 11 e a VSL na 13.
+
+Medido, tela 0, mesmo aparelho:
+  requisicoes      12 -> 6
+  bytes            292 kB -> 207 kB
+  de terceiros     7 -> 2
+  scripts de video 4 -> 0
+
+Nao ha risco visual porque o index.html ja estilizava
+wistia-player:not(:defined) com o quadro borrado do proprio video -- o lugar do
+player fica ocupado com a imagem certa ate o script chegar.
+
+AS FONTES NAO SAO O GARGALO, ao contrario do que parece: o CSS do Google
+referencia 48 arquivos, mas sao os subsets de outros alfabetos. O navegador
+baixa UM woff2 de 27 kB (fonte variavel) e ignora o resto. Nao vale mexer.
+
+Protegido por scripts/testar-videos.mjs, que falha nos dois sentidos: se os
+scripts voltarem para o <head>, e se o player deixar de montar na tela da
+oferta -- essa segunda quebra nao aparece em log nenhum, so no faturamento.
+
+
+NO AR DESDE 09/08/2026, 18h23 (commit 6cce8c0)
+----------------------------------------------
+Deploy rezassagradas-7fpc5syk7. Conferido logo depois, nos DOIS dominios
+(rezassagradas.site e rezassagradas.vercel.app):
+
+  /api/health   mode=live, storage=postgres, webhookConfigured=true,
+                pixelId=1907363626541719, capiAtiva=true
+  /, /obg       200
+  /admin        200, servindo o painel novo (kpis-anuncios, chipsColunas,
+                secaoConfigAnuncios, campo-meta-roas presentes no HTML/JS/CSS)
+
+A migracao das colunas impressoes e cliques roda no primeiro evento de funil de
+qualquer visitante: registrarEventoDoFunil chama preparar(), que roda o ALTER
+TABLE idempotente. Nao precisa de acao nenhuma.
+
+Para desfazer, se preciso: npx vercel rollback
+rezassagradas-nt3cn2y5y-omarjorge.vercel.app (o deploy que estava no ar antes).
+
+
+IP DO CLIENTE CORRIGIDO NOS EVENTOS DO META (09/08/2026)
+--------------------------------------------------------
+O Gerenciador de Eventos passou a cobrar client_ip_address nos PageView. A
+causa estava no codigo, nao na infraestrutura: /api/track e /api/orders usavam
+`req.ip` cru. Atras da CDN da Vercel, `req.ip` e a BORDA -- o mesmo endereco
+para todo visitante. O Meta recebia todos os eventos com o IP do proxy, o que e
+pior do que nao mandar nada: todo mundo vira a mesma pessoa e a correspondencia
+despenca.
+
+O projeto ja tinha a funcao certa (`ipDoCliente`, que le x-vercel-forwarded-for,
+o unico cabecalho que o cliente nao consegue forjar), mas ela morava em
+server/painel/sessao.ts e so o painel usava. Foi movida para server/utils.ts e
+agora e usada por quem precisa:
+
+  server/routes/track.ts    PageView, ViewContent, Lead e afins
+  server/routes/orders.ts   o IP gravado no pedido, que vai no Purchase horas
+                            depois -- se nascer errado, nao ha como corrigir
+  server/rateLimit.ts       ver o paragrafo abaixo
+
+DE QUEBRA, UM DEFEITO QUE CUSTAVA VENDA: o limitador de requisicoes tambem
+chaveava por `req.ip`. Com todos os clientes caindo no mesmo balde, o teto de 12
+cobrancas por janela valia para o SITE INTEIRO em vez de por pessoa -- o
+decimo terceiro comprador do periodo levava 429 sem ter feito nada. Ninguem
+tinha percebido porque o volume ainda e baixo; escalar anuncio teria feito
+aparecer como "o checkout parou de funcionar de vez em quando".
+
+Provado por mutacao: reintroduzindo `req.ip` em track.ts, o caso novo da bateria
+falha com "veio 127.0.0.1"; com a correcao, passa com o IP do cliente.
+
+NAO DEPENDE MAIS DE TRUST_PROXY. A variavel continua existindo e ainda vale
+conferir se esta na Vercel, mas o IP dos eventos e do limitador nao passa mais
+por ela.
+
+SOBRE O IPV6 QUE O META SUGERE: nao ha o que fazer. Nem rezassagradas.site nem
+o cname.vercel-dns.com publicam registro AAAA -- a Vercel nao oferece IPv6 nos
+enderecos dela. Criar um AAAA na Hostinger apontando para lugar nenhum quebraria
+o site para quem tem IPv6. Esse item do aviso se encaixa no proprio texto do
+Meta: "se o problema nao permitir que alguma acao seja tomada, voce podera
+ignora-lo".
+
+
+ABA ANUNCIOS REFEITA COMO PAINEL DE MIDIA PAGA (09/08/2026)
+-----------------------------------------------------------
+A aba /admin -> Anuncios foi separada em duas: "Desempenho", que agora tem so
+os numeros dos anuncios, e "Configuracao", onde foram parar as credenciais do
+Meta, a planilha de investimento, os parametros de URL e o diagnostico de envio
+-- tudo que antes ficava embaixo da tabela e empurrava os numeros para fora da
+tela.
+
+O que a tela ganhou, seguindo o que Gerenciador de Anuncios, Triple Whale e
+Hyros mostram:
+
+  - Faixa de 8 cartoes no topo: Investido, Receita, Lucro, ROAS, Vendas, Custo
+    por venda, Ticket medio e CTR, cada um com a variacao vs. o periodo
+    anterior de mesmo tamanho (7 dias comparam com os 7 anteriores).
+  - Tres conjuntos de colunas, em vez de doze colunas espremidas:
+      Resultado -> Investido, Receita, Lucro, ROAS, Vendas, Custo/venda,
+                   Ticket, Margem
+      Trafego   -> Investido, Impressoes, Cliques, CTR, CPC, CPM, Visitas,
+                   Custo/visita
+      Funil     -> Visitas, Quiz, VSL, Checkout, Pix, Vendas, com a taxa de
+                   passagem de cada etapa embaixo da contagem
+  - Semaforo no ROAS contra uma META configuravel (padrao 2x, muda em
+    Configuracao): verde passou da meta, amarelo entre 1x e a meta, vermelho
+    deu prejuizo.
+  - Linha de Total no rodape da tabela.
+  - Divisao por zero mostra "--", nunca zero. CPA de R$ 0,00 num anuncio sem
+    venda faria o mais caro da conta parecer o mais barato.
+
+O QUE ISSO EXIGIU NO BANCO: a tabela investimento_anuncios ganhou as colunas
+impressoes e cliques (ALTER TABLE ... ADD COLUMN IF NOT EXISTS, roda sozinho no
+proximo deploy; o historico ja digitado nao se perde). Sem esses dois numeros
+nao existe CTR, CPC nem CPM -- eles medem o que acontece ANTES de a pessoa
+chegar no site, e o nosso banco so enxerga quem chegou.
+
+DE ONDE VEM IMPRESSAO E CLIQUE: da planilha (o importador agora reconhece as
+colunas "Impressions"/"Impressoes" e "Link clicks"/"Cliques no link", preferindo
+o clique NO LINK ao clique em qualquer coisa) ou digitados a mao no periodo
+"Hoje", nas proprias celulas da aba Trafego. Sao opcionais: planilha que so tem
+gasto continua funcionando igual, e as colunas que dependem deles mostram "--".
+
+Testado com scripts/testar-painel-anuncios.mjs (47 casos, bateria nova) e
+conferido num Chromium de verdade em 1280px e 390px, sem erro de console. O caso
+que mais importa dessa bateria: gasto de dez dias atras NAO entra no total de
+hoje -- esse erro nao derruba tela nenhuma, so faz o dono triplicar o orcamento
+em cima de um numero inventado.
+
+VERIFICACAO DE TELA AINDA PENDENTE (nao bloqueia, mas continua devendo):
+    - rodar scripts/testar-cta.mjs (o relogio do botao mudou de fonte)
+    - conferir no celular que o play grande aparece e o som sai ao tocar
+    - o Playwright nao esta instalado nesta maquina; ver os comandos no CLAUDE.md
+
+SOBRAS NAS VARIAVEIS DA VERCEL (inofensivas, ninguem le, mas confundem):
+    BITFLOW_MODE, BITFLOW_CLIENT_ID, BITFLOW_CLIENT_SECRET -- gateway removido
+    no commit bc5f27b. PIXGO_MODE -- o nome que o codigo le e PIX_MODE, que
+    existe e esta correta. Apagar quando der.
+
+
+-------------------------------------------------------------------------------
+6. O QUE FALTA - EM ORDEM DE IMPORTANCIA
+-------------------------------------------------------------------------------
+
+PARA O RASTREAMENTO DO META COMECAR A VALER (o codigo ja esta pronto):
+
+ [x] COMPRAR O DOMINIO PROPRIO -- feito em 09/08/2026: rezassagradas.site,
+     registrado na Hostinger e ja apontado para a Vercel (ver secao 5).
+     Era pre-requisito: .vercel.app e DNS compartilhado e NAO pode ser
+     verificado no Meta, e sem verificacao de dominio nao ha Configuracao de
+     Eventos Agregados -- que e o que faz a compra vinda de iPhone ser
+     atribuida.
+ [ ] VERIFICAR O DOMINIO NO META (Gerenciador de Negocios -> Seguranca da
+     marca -> Dominios). Agora e possivel; antes nao era. Sem isso os Eventos
+     Agregados continuam sem configuracao.
+ [ ] Criar o conjunto de dados (Pixel) e gerar o token da API de Conversoes.
+ [ ] Colar os dois em /admin -> Anuncios -> Credenciais do Meta e apertar
+     "Testar conexao". Nao precisa de deploy nem de mexer na Vercel.
+     Alternativa: META_PIXEL_ID, VITE_META_PIXEL_ID e META_CAPI_TOKEN como
+     variaveis -- e nesse caso o VITE_ precisa existir no momento do BUILD.
+     Conferir que PAINEL_CHAVE_MESTRA existe na Vercel: sem ela o painel recusa
+     guardar o token, porque so aceita guardar cifrado.
+ [ ] No anuncio: marcar "Eventos do site" e colar os parametros de URL com as
+     variaveis dinamicas. Sem espaco nem acento nos nomes de campanha, conjunto
+     e anuncio -- eles vao parar na URL.
+ [ ] Conferir com o codigo de teste e APAGA-LO depois: com ele preenchido, nada
+     conta como conversao real.
+
+BLOQUEANTES ANTES DE ESCALAR ANUNCIO (dinheiro entra e o cliente nao recebe):
+
+ [x] ENVIO DE E-MAIL COM OS ACESSOS -- CODIGO PRONTO EM 09/08/2026.
+     server/email.ts e o unico arquivo que conhece o provedor (Resend por
+     padrao, trocavel). O e-mail sai quando o pagamento e confirmado, leva o
+     MESMO link assinado de 72 h que o botao "reenviar entrega" do painel gera,
+     e vai em HTML e texto puro. Nunca derruba a venda: provedor fora do ar ou
+     travado, a cobranca e confirmada e o acesso liberado do mesmo jeito. A
+     reentrega do webhook nao manda o e-mail duas vezes (guarda de
+     accessEmailSentAt no pedido). O botao do painel agora reenvia por e-mail
+     ALEM de devolver o link para o WhatsApp, e diz se saiu.
+     Bateria: scripts/testar-email.mjs, 26 casos.
+     [ ] FALTA LIGAR, e e trabalho do dono (~10 min, sem deploy de codigo):
+         1. criar conta em resend.com (free tier: 3.000 e-mails/mes)
+         2. verificar o dominio rezassagradas.site la -- eles dao os registros
+            SPF e DKIM para por na Hostinger, que hospeda a zona DNS
+         3. por EMAIL_API_KEY e EMAIL_REMETENTE nas variaveis da Vercel
+         Enquanto a chave nao existir, nada e enviado e nada quebra: e
+         exatamente o comportamento de hoje.
+ [ ] PREENCHER AS DELIVERY_URL_* com os links reais dos produtos. Sem elas o
+     cliente ve "o link chegara no seu e-mail" (que tambem nao chega). Da para
+     fazer sem deploy, pela aba Entregas do painel.
+ [ ] CONFIRMAR AS VARIAVEIS DE AMBIENTE DA VERCEL: DATABASE_URL, ADMIN_SENHA,
+     PAINEL_CHAVE_MESTRA, PUBLIC_BASE_URL, TRUST_PROXY=true. O .env.local desta
+     maquina so tem PIXGO_API_KEY e PIXGO_WEBHOOK_SECRET; o resto vive so la.
+
+JURIDICO E CONFORMIDADE (risco de conta de anuncio e de processo):
+
+ [ ] Pagina de politica de privacidade e termos, com a base legal do tratamento
+     do CPF. Guardamos CPF, nome, e-mail, telefone e IP.
+ [ ] Prazo de retencao dos dados e restricao de acesso (LGPD).
+ [ ] Processo de reembolso - a garantia de 30 dias e prometida na copy e hoje
+     nao existe procedimento nenhum.
+ [ ] REVISAO DA COPY frente ao CDC e as politicas de anuncio: depoimentos com
+     promessa de cura e de dinheiro ("exames voltaram normais", "aposentadoria
+     liberada"), "milhares de selecionados", "24 horas", fotos de banco de
+     imagens usadas como pessoas reais. E o item mais capaz de derrubar a conta
+     de anuncios inteira -- e no META o risco e MAIOR que no Google: as regras
+     deles sobre saude, situacao financeira e atributos pessoais sao mais duras,
+     e a punicao usual nao e reprovar o anuncio, e desabilitar a conta (as vezes
+     o perfil pessoal junto). Rastreamento perfeito numa conta que cai na
+     primeira revisao nao serve para nada.
+
+PRODUTO E OPERACAO:
+
+ [ ] /leads nao existe. O rewrite esta no vercel.json e no vite.config.ts, mas
+     nao ha public/leads.html nem server/routes/leads.ts - em producao da 404.
+     A especificacao completa esta na PARTE 12 do PROMPT-PAINEL-ADMIN.md.
+ [ ] Abas Relatorios, Funil e Acessos do /admin sao placeholders ("entra na
+     proxima etapa"). Especificacao nas PARTES 7, 8 e 10 do mesmo arquivo.
+ [ ] Rastreador de funil (utm/gclid, etapas do quiz, abandono no checkout). E do
+     que a aba Funil depende, e e o que diria onde o funil vaza.
+ [ ] Cron de varredura de pendentes (PARTE 2, item 6 do PROMPT). Hoje a rede de
+     seguranca e o botao "Verificar pendentes" do painel, apertado a mao.
+ [ ] Depoimentos: o terceiro (Antonio Carlos) nao tem video; varias fotos ainda
+     apontam para o Unsplash, inclusive uma opcao do quiz (q1_op4).
+
+
+-------------------------------------------------------------------------------
+7. COMO RODAR
+-------------------------------------------------------------------------------
+
+  npm install
+  cp .env.example .env.local          # e preencha
+
+  Dois processos em desenvolvimento:
+  npm run dev:server                  # backend  -> http://localhost:3333
+  npm run dev                         # frontend -> http://localhost:3000
+
+  Sem gerar cobranca real:
+  PIX_MODE=mock npm run dev:server    # confirma sozinho em ~12 s
+
+  Checagem de tipos:  npm run lint  (tsc --noEmit)
+  Build:              npm run build
+  Producao local:     SERVE_STATIC=true npm start
+
+  ENDERECOS
+  /            funil          /admin   painel do dono
+  /obg         obrigado       /leads   painel da equipe (NAO EXISTE AINDA)
+  /api/health  saude do servidor, modo e consumo de consultas do dia
+
+
+-------------------------------------------------------------------------------
+8. MAPA DOS ARQUIVOS QUE IMPORTAM
+-------------------------------------------------------------------------------
+
+  src/App.tsx ....................... ordem das telas do funil
+  src/data/funnelData.ts ............ TODA a copy e o tempo do botao (260 s)
+  src/components/OfferScreen.tsx .... VSL + relogio do botao de compra
+  src/components/InlineCheckout.tsx . checkout, bumps, upsell, downsell
+  src/components/PixPanel.tsx ....... QR Code e copia-e-cola
+  src/hooks/useOrderStatus.ts ....... consulta de status no navegador
+
+  server/catalog.ts ................. PRECOS - fonte unica da verdade
+  server/pix.ts ..................... unico arquivo que conhece a PixGo
+  server/orders.ts .................. criar, aplicar status, reconciliar, acesso
+  server/routes/webhook.ts .......... callback assinado da PixGo
+  server/routes/orders.ts ........... POST /api/orders e consultas
+  server/routes/admin.ts ............ backend do painel
+  server/painel/ .................... sessoes assinadas e tabelas do painel
+  server/store/ ..................... pgStore (producao) e fileStore (dev)
+  server/config.ts .................. todas as variaveis de ambiente
+  api/index.ts ...................... entrada da Vercel (retenta o banco frio)
+
+  README.md ......................... integracao, limites e endpoints
+  PROMPT-PAINEL-ADMIN.md ............ especificacao completa do painel.
+      ATENCAO: o topo dele avisa que o gateway seria a BitFlow. Esta
+      DESATUALIZADO: voltou a ser PixGo. Tudo sobre painel, funil, relatorios e
+      LGPD continua valendo; o que fala de gateway, nao.
+  CLAUDE.md ......................... instrucoes para o Claude Code
+  .claude/ .......................... agentes, contexto, roadmap e decisoes
+
+
+-------------------------------------------------------------------------------
+9. ARMADILHAS JA PISADAS (NAO PISE DE NOVO)
+-------------------------------------------------------------------------------
+
+ - new URLSearchParams().get() devolve null, e Number(null) e 0, nao NaN. Foi
+   assim que o botao de compra passou a aparecer NA HORA para 100% dos clientes:
+   o unico caso sem teste era abrir a pagina sem parametro nenhum.
+ - Comparar status com includes() transformaria "unpaid" em "paid" e entregaria
+   produto de graca. A comparacao e por igualdade exata.
+ - PIX_MODE tem padrao "live" de proposito. Cair em mock por variavel ausente
+   entregaria produto sem pagamento.
+ - server/config.ts carrega o .env.local do diretorio atual com override:true.
+   Um teste rodado na raiz aponta para a PixGo DE VERDADE mesmo recebendo outras
+   variaveis - por isso o testar-pixgo.mjs roda a partir de uma pasta vazia.
+ - Na Vercel a funcao pode congelar assim que responde: promessa solta pode
+   nunca executar. Toda gravacao precisa ser aguardada antes de responder.
+ - O banco (Neon) hiberna. Guardar a falha da primeira conexao envenenaria a
+   instancia inteira - por isso api/index.ts descarta a tentativa falha.
+ - Um teste que "passa" pode estar medindo pagina quebrada: o de responsividade
+   aprovou o funil inteiro enquanto ele nao renderizava. Todo teste de tela
+   agora precisa provar que a etapa renderizou antes de medir.
+ - No Windows, matar o processo do servidor de teste costuma deixar o filho
+   vivo escutando na porta. Os testes param se a porta ja estiver ocupada.
+
+
+-------------------------------------------------------------------------------
+ABA RESUMO E MODELO DE CUSTO -- 19/08/2026
+-------------------------------------------------------------------------------
+
+O PROBLEMA QUE EXISTIA. "Lucro", em qualquer tela do painel, queria dizer
+`faturamento - anuncio`. Faltavam tres custos, e os tres erram para o MESMO
+lado, para mais:
+
+  - a taxa que o gateway retem de cada transacao liquidada;
+  - o imposto sobre a venda;
+  - o imposto que a Meta cobra POR FORA do leilao. O campo `spend` do endpoint
+    de insights nao inclui os tributos da fatura, e era esse numero cru que
+    virava "gasto" no painel.
+
+O codigo antigo compensava isso com uma meta de ROAS chutada em 2x -- o
+comentario de CHAVE_META_ROAS em server/routes/admin.ts lista exatamente os
+custos que nao entravam. Chute que acerta por acaso: com taxa de 5% e imposto
+de 6%, o empate real fica em ~1,26x, e exigir 2x deixava anuncio lucrativo
+parado. Com taxa de 12%, o 2x estava certo.
+
+O QUE PASSOU A EXISTIR:
+
+  server/custos.ts      o modelo de custo (percentuais + valores fixos) e a
+                        reparticao inteira, sem I/O. Guardado como JSON em
+                        `configuracoes`, mesma decisao do cadastro de BMs.
+  server/resumo.ts      a agregacao dos pedidos do periodo. Conta venda pelo
+                        MESMO criterio de fechamento.ts, de proposito.
+  GET  /admin/resumo    os cartoes prontos
+  GET/POST /admin/custos    o modelo
+  POST /admin/despesas      despesas fora do anuncio
+  public/admin-resumo.js    a aba, primeira da fila
+
+MEDIDO NA BATERIA (scripts/testar-aba-resumo.mjs, com pedidos de verdade):
+sobre R$ 141,00 de faturamento e R$ 50,00 de leilao, o painel antigo dizia
+R$ 91,00 de lucro. O certo e R$ 67,49. A diferenca de R$ 23,51 -- taxa 1005 +
+imposto da venda 846 + imposto do anuncio 500 -- vale 16,7% do faturamento.
+
+DECISOES QUE VALE CONHECER ANTES DE MEXER:
+
+  - ROAS usa o gasto do LEILAO, sem o imposto do anuncio, para bater com o
+    Gerenciador e com a aba Anuncios. O imposto entra no lucro, no ROI e na
+    margem. `roasDeEquilibrio` usa a MESMA base -- e o teste prova isso
+    calculando o lucro no ponto de equilibrio e exigindo zero.
+  - A taxa do gateway incide sobre o que foi devolvido tambem. Gateway nenhum
+    devolve a propria taxa num reembolso, e a leitura conservadora erra o lucro
+    para MENOS. Errar para menos manda esperar; para mais, manda escalar.
+  - Sem o modelo preenchido, a conta reproduz EXATAMENTE o painel antigo, e a
+    tela AVISA que o numero esta maior que o real. Zero configurado e zero real
+    sao a mesma tela e significados opostos.
+  - Chargeback tem cartao proprio, separado de reembolso: 5% de reembolso e
+    margem ruim, 5% de chargeback e conta cancelada pelo adquirente. A distincao
+    ja era possivel -- `order.statusGateway` guarda o status cru --, so nunca
+    tinha sido usada.
+  - Despesa mensal e rateada por dia (/30). Contar o mes inteiro faria a
+    assinatura de R$ 300 aparecer inteira numa janela de um dia e dizer que a
+    terca deu prejuizo.
+  - /admin/resumo NAO aceita `?bm=`. O gasto ainda e importado por campanha, sem
+    o carimbo da BM: filtrar a receita de um gerenciador contra o gasto de todos
+    mostraria prejuizo que nao existe. Volta quando o gasto vier por conta de
+    anuncios.
+
+O QUE FALTA AQUI (e trabalho do dono, nao do codigo): preencher a taxa real da
+SyncPay, o imposto sobre venda e o imposto da fatura da Meta em
+/admin -> Resumo -> "Quanto custa vender". Ate la os cartoes de custo aparecem
+zerados e a tela diz por que.
+
+
+-------------------------------------------------------------------------------
+GASTO POR BM -- 19/08/2026
+-------------------------------------------------------------------------------
+
+O QUE FALTAVA. O painel ja sabia quanto cada gerenciador FATUROU (o `bm=` da URL
+carimba visita e pedido), mas o gasto vinha de uma conta so, sem dono. Receita
+separada por BM contra gasto de todas juntas nao e um relatorio impreciso: mostra
+a BM boa com ROAS baixo e a ruim com ROAS infinito, e manda desligar exatamente
+a que estava pagando.
+
+O QUE PASSOU A EXISTIR:
+
+  importarInvestimentoPorBm()   em server/metaAnuncios.ts. Percorre as BMs
+                                cadastradas e ativas, le a conta de anuncios de
+                                CADA uma com o token DELA, e grava com carimbo.
+  investimento_anuncios.bm      coluna nova, DEFAULT ''. Vazio = "nao sei de
+                                quem e", que e diferente de pertencer a alguem.
+  POST /admin/bms/importar-gasto  a rota, com botao na aba BMs.
+  GET  /admin/resumo?bm=        passou a aceitar o filtro: receita E gasto
+                                recortados juntos.
+
+DECISOES QUE VALE CONHECER:
+
+  - CADA CONTA FALHA SOZINHA. Token vencido numa BM nao impede a importacao das
+    outras; a resposta lista conta por conta, com motivo. Abortar tudo zeraria a
+    tela no dia em que o dono mais precisa dela.
+  - O token da BM NAO cai para o token geral aqui. Em bms.ts a queda existe e
+    esta certa (evita perder venda); aqui seria defeito, porque o token geral le
+    OUTRA conta e o gasto dela entraria com o carimbo desta BM -- plausivel e
+    errado, a unica categoria de erro que ninguem encontra olhando.
+  - Gravacao SEM carimbo nao apaga o carimbo que ja existia
+    (COALESCE/NULLIF no ON CONFLICT). Sem isso, importar a planilha depois de
+    importar por conta zeraria o vinculo do historico inteiro, em silencio,
+    porque o total continuaria certo.
+  - Gasto sem carimbo (planilha, digitado a mao, conta unica antiga) cai na
+    linha "(sem BM)". Distribui-lo entre as BMs seria inventar.
+  - Filtrando por BM, a despesa fixa sai da conta: ela e do negocio, nao do
+    gerenciador.
+  - Lucro por BM usa o MESMO modelo de custo da aba Resumo (server/custos.ts).
+    Duas telas do mesmo painel com lucros diferentes para a mesma BM faz o dono
+    parar de confiar nas duas.
+
+MEDIDO em scripts/testar-gasto-por-bm.mjs (45 checagens, Graph falso): tres
+contas com gastos diferentes e tokens diferentes; a terceira com token vencido
+falha sozinha e nomeada. Alpha faturou R$ 94 gastando R$ 100 (ROAS 0,94) e Beta
+faturou R$ 47 gastando R$ 20 (ROAS 2,35) -- juntas dariam 1,175 e pareceriam um
+negocio so, mediano.
+
+===============================================================================
+FIM. Atualize este arquivo quando o estado mudar - ele so vale se for verdade.
+===============================================================================

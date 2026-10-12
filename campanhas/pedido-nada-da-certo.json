@@ -1,0 +1,24 @@
+{
+  "_leia": [
+    "Fluxo direto de PEDIDO DE ORAÇÃO (15/08/2026), destino rezassagradas.site/pedido.",
+    "Ângulo: 'faço tudo certo e nada dá certo' — 47% do quiz marcam essa resposta.",
+    "1 campanha, 1 conjunto, 1 anúncio, R$ 15/dia. Nenhuma campanha antiga é tocada.",
+    "",
+    "Sobe com: node scripts/gerenciar-anuncios.mjs subir-lote campanhas/pedido-nada-da-certo.json"
+  ],
+
+  "campanha": "PEDIDO-NADA-DA-CERTO",
+  "reais": 15,
+  "idadeMin": 45,
+  "inicioEm": "2026-08-15T09:45:00-03:00",
+
+  "pecas": [
+    {
+      "nome": "A-PEDIDO-NADA-DA-CERTO-4x5",
+      "arquivo": "criativos-teste-quiz/nada-da-certo-4x5.png",
+      "destino": "https://rezassagradas.site/pedido",
+      "titulo": "Você faz tudo certo... e nada dá certo?",
+      "mensagem": "Trabalha, se esforça, faz a sua parte — e parece que a vida não anda. 🕯️ Pode não ser falta de esforço. Faça o seu pedido de oração ao Arcanjo Miguel: escreva o que está travado na sua vida e o que você precisa. Ele será levado em seu nome. Toque em Saiba mais."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "_leia": [
+    "Primeira leva de criativos do FLUXO DIRETO DE PEDIDO DE ORAÇÃO (15/08/2026):",
+    "o anúncio cai em rezassagradas.site/pedido — tela do pedido com o Arcanjo",
+    "atrás -> análise -> VSL. Nenhuma campanha antiga aponta para cá.",
+    "",
+    "Ângulo: proteção dos filhos — 77% do quiz temem por filhos/família; nunca",
+    "tinha sido testado como arte própria. Estrutura padrão dos testes: 1 campanha,",
+    "1 conjunto, 1 anúncio, R$ 15/dia. `destino` na peça é o que a manda ao /pedido.",
+    "",
+    "Sobe com: node scripts/gerenciar-anuncios.mjs subir-lote campanhas/pedido-filhos.json"
+  ],
+
+  "campanha": "PEDIDO-FILHOS",
+  "reais": 15,
+  "idadeMin": 45,
+  "inicioEm": "2026-08-15T09:45:00-03:00",
+
+  "pecas": [
+    {
+      "nome": "A-PEDIDO-FILHOS-4x5",
+      "arquivo": "criativos-teste-quiz/filhos-protecao-4x5.png",
+      "destino": "https://rezassagradas.site/pedido",
+      "titulo": "Coloque seus filhos sob a proteção de Miguel",
+      "mensagem": "Toda mãe pede a Deus pelos filhos — mesmo quando eles já cresceram. 🙏 Faça agora o seu pedido de oração ao Arcanjo Miguel: escreva o nome de quem você ama e o que pede por eles. O pedido será levado em seu nome. Toque em Saiba mais."
+    }
+  ]
+}

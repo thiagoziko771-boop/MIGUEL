@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 20
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/investimento",
+      "schedule": "10 6 * * *"
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/leads", "destination": "/leads.html" },
+    { "source": "/obg", "destination": "/obg.html" },
+    { "source": "/privacidade", "destination": "/privacidade.html" },
+    { "source": "/pedido", "destination": "/index.html" }
+  ]
+}

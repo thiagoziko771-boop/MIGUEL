@@ -1,0 +1,29 @@
+{
+  "_leia": [
+    "Vídeo do padre (avatar da página Padre Elias da Luz) segurando a imagem",
+    "de São Miguel em frente à igreja — 1072x1920, 18,7 s, mandado pelo dono",
+    "em 14/08/2026 (gerado em 09/08). Resolução FULL HD: não corre o risco do",
+    "vídeo D, que era 480p e pagou CPM de R$ 1.390 em Reels.",
+    "",
+    "Estrutura padrão dos testes de 14/08: campanha própria, um conjunto, um",
+    "anúncio, R$ 15/dia. Cai na capa PADRÃO do site ('Sua mensagem do Arcanjo",
+    "Miguel está pronta' / botão OUVIR), que casa com o convite falado do padre.",
+    "",
+    "Sobe com:",
+    "  node scripts/gerenciar-anuncios.mjs subir-lote campanhas/teste-padre-video.json"
+  ],
+
+  "campanha": "TESTE-PADRE-VIDEO",
+  "reais": 15,
+  "idadeMin": 45,
+  "inicioEm": "2026-08-14T17:30:00-03:00",
+
+  "pecas": [
+    {
+      "nome": "A-PADRE-MIGUEL-9x16",
+      "arquivo": "criativos-teste-quiz/padre-video-9x16.mp4",
+      "titulo": "Ouça o que Miguel tem para te dizer hoje",
+      "mensagem": "O Arcanjo Miguel tem uma mensagem preparada para este momento da sua vida. 🙏 Toque em Saiba mais e ouça agora — leva menos de 2 minutos."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+node_modules/
+build/
+dist/
+coverage/
+# Base de pedidos: contem CPF e dados de contato dos clientes.
+.data/
+# Base de demonstracao, usada para mostrar o painel sem tocar nos pedidos reais.
+.data-demo/
+# Base do ambiente de teste (npm run teste), com os pedidos inventados das
+# baterias e as fotos que elas tiram das telas.
+.data-teste/
+# Pasta que a bateria da PixGo deixa para tras quando roda a partir da raiz.
+# Tem pedidos com CPF inventado, mas a regra vale para qualquer .data-*: uma
+# pasta de pedidos fora do .gitignore e como um CPF de cliente entra no repo.
+.data-px/
+# Fotos que as baterias de navegador tiram para conferencia. Sao artefato de
+# execucao, nao codigo -- e uma delas ja entrou num commit por descuido.
+*.png
+!public/**/*.png
+!src/**/*.png
+.DS_Store
+*.log
+.env*
+!.env.example
+.vercel/
+
+.vercel
+.env*
+
+# Criativos baixados do Meta para reaproveitar em outra conta. São binários
+# grandes e a fonte da verdade é a conta de anúncios, não o repositório.
+criativos-que-venderam/

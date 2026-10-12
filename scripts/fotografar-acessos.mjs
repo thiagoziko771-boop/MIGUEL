@@ -1,0 +1,35 @@
+/** Fotografa a aba Acessos no painel local (Vite :3000 → backend :3333). */
+import fs from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+const { chromium } = await (async () => {
+  const fora = process.env.PLAYWRIGHT_DIR;
+  if (fora) return createRequire(path.resolve(fora) + path.sep)('playwright');
+  return await import('playwright');
+})();
+const BASE = process.env.BASE_URL ?? 'http://localhost:3000';
+const SENHA = process.env.ADMIN_SENHA_LOCAL ?? 'painel-local-2026';
+const PASTA = path.resolve('.data/fotos');
+fs.mkdirSync(PASTA, { recursive: true });
+const nav = await chromium.launch();
+const ctx = await nav.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'pt-BR' });
+const p = await ctx.newPage();
+const erros = [];
+p.on('pageerror', (e) => erros.push(String(e)));
+p.on('console', (m) => { if (m.type() === 'error') erros.push(m.text()); });
+await p.goto(`${BASE}/admin`, { waitUntil: 'networkidle' });
+await p.fill('#senha', SENHA);
+await p.click('#botaoEntrar');
+await p.waitForSelector('#painel:not([hidden])', { timeout: 15000 });
+await p.click('.abas button[data-aba="acessos"]');
+await p.waitForSelector('#kpisAcessos .kpi', { timeout: 15000 });
+await p.waitForTimeout(500);
+await p.screenshot({ path: path.join(PASTA, 'acessos-1-entregas.png'), fullPage: true });
+await p.click('#chipsAcessos button[data-secao="acoes"]');
+await p.waitForTimeout(300);
+await p.screenshot({ path: path.join(PASTA, 'acessos-2-acoes.png'), fullPage: true });
+await p.click('#chipsAcessos button[data-secao="logins"]');
+await p.waitForTimeout(300);
+await p.screenshot({ path: path.join(PASTA, 'acessos-3-logins.png'), fullPage: true });
+console.log('erros de JS:', erros.length ? erros : 'nenhum');
+await nav.close();

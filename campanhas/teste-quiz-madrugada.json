@@ -1,0 +1,28 @@
+{
+  "_leia": [
+    "Teste do 'sinal' mais sentido no quiz (14/08/2026): 'acordo de madrugada",
+    "sem motivo' — metade de quem responde a pergunta dos sinais marca essa",
+    "opção. Arte no GPT Image 2 (tipografia gigante, pedido do dono) convertida",
+    "para 4:5 pelo Nano Banana 2 com o texto conferido letra a letra.",
+    "",
+    "ESTRUTURA A PEDIDO DO DONO (14/08): campanha própria, um conjunto, um",
+    "anúncio, R$ 15/dia — mesma família dos testes TESTE-QUIZ-*.",
+    "",
+    "Sobe com:",
+    "  node scripts/gerenciar-anuncios.mjs subir-lote campanhas/teste-quiz-madrugada.json"
+  ],
+
+  "campanha": "TESTE-QUIZ-MADRUGADA",
+  "reais": 15,
+  "idadeMin": 45,
+  "inicioEm": "2026-08-14T16:50:00-03:00",
+
+  "pecas": [
+    {
+      "nome": "A-MADRUGADA-333-4x5",
+      "arquivo": "criativos-teste-quiz/madrugada-333-4x5.png",
+      "titulo": "Você acorda de madrugada sem motivo?",
+      "mensagem": "Acordar entre 3h e 4h da manhã sem motivo, com o coração apertado... ⏰ Muita gente sente e ignora. Os antigos diziam que essa é a hora em que o céu tenta falar com a gente. O Arcanjo Miguel tem um recado para você — ouça antes de dormir hoje. 🙏"
+    }
+  ]
+}

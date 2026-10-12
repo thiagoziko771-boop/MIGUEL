@@ -1,0 +1,430 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-cinzel: 'Cinzel', serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+
+  /*
+   * Par de fontes do tema "Sacred Shield", usado nas duas telas escuras (hero e
+   * processamento). Caslon carrega a autoridade dos títulos, Work Sans o resto.
+   * Só existem aqui — o miolo claro do funil continua em Plus Jakarta Sans.
+   */
+  --font-caslon: 'Libre Caslon Text', Georgia, serif;
+  --font-work: 'Work Sans', system-ui, sans-serif;
+
+  /*
+   * Escala de texto maior que a padrão do Tailwind.
+   *
+   * Quem compra aqui tem 50 anos ou mais e boa parte usa óculos de leitura, no
+   * celular, muitas vezes com pouca luz. Texto de 12px é o que essa pessoa pula
+   * — e o que ela pula costuma ser exatamente a linha que explica o preço, o
+   * prazo ou a garantia. Não ler não é detalhe estético: é a dúvida que faz
+   * fechar a aba.
+   *
+   * O aumento é MAIOR nos tamanhos pequenos e menor nos grandes, de propósito.
+   * Título de 36px já se lê de longe; multiplicar tudo pelo mesmo fator faria os
+   * títulos estourarem em tela de 320px sem resolver o que de fato atrapalha.
+   *
+   * A hierarquia entre os degraus foi mantida: cada um continua visivelmente
+   * maior que o anterior, senão o texto vira um bloco só e a leitura piora
+   * mesmo com a fonte maior.
+   *
+   * As alturas de linha vêm junto e um pouco mais folgadas: linha apertada
+   * cansa a vista tanto quanto letra pequena.
+   */
+  --text-xs: 0.8125rem;      /* 13px, era 12 */
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.9375rem;      /* 15px, era 14 */
+  --text-sm--line-height: 1.55;
+  --text-base: 1.0625rem;    /* 17px, era 16 */
+  --text-base--line-height: 1.6;
+  --text-lg: 1.1875rem;      /* 19px, era 18 */
+  --text-lg--line-height: 1.55;
+  --text-xl: 1.3125rem;      /* 21px, era 20 */
+  --text-xl--line-height: 1.45;
+  --text-2xl: 1.5625rem;     /* 25px, era 24 */
+  --text-2xl--line-height: 1.35;
+  --text-3xl: 1.9375rem;     /* 31px, era 30 */
+  --text-3xl--line-height: 1.25;
+  --text-4xl: 2.3125rem;     /* 37px, era 36 */
+  --text-4xl--line-height: 1.15;
+  --text-5xl: 3.125rem;      /* 50px, era 48 */
+  --text-5xl--line-height: 1.1;
+
+  --color-min-bg: #FDFCFB;
+  --color-min-surface: #FFFFFF;
+  --color-min-primary: #2D2926;
+  --color-min-accent: #A89060;
+  --color-min-[#A89060]: #A89060;
+  --color-min-border: #E8E4DF;
+  --color-min-muted: #7A7570;
+
+  /*
+   * ------------------------------------------------------------------
+   * PALETA DO FUNIL, POR PAPEL — não por cor.
+   *
+   * Os valores abaixo são exatamente os hexadecimais que já estavam
+   * espalhados pelos componentes; nada muda de aparência ao trocar
+   * `bg-[#FDFCFB]` por `bg-fundo`. O ganho é outro: com a cor atrás de um
+   * nome, o tema escuro passa a ser uma lista de variáveis redefinidas lá
+   * embaixo, em vez de um segundo conjunto de classes em cada arquivo.
+   *
+   * O nome diz o PAPEL porque o papel não muda de tema para tema. "ouro" é
+   * o acento em qualquer um dos dois; "#A89060" só é verdade em um.
+   * ------------------------------------------------------------------
+   */
+  --color-fundo: #FDFCFB;        /* fundo da página */
+  --color-superficie: #FFFFFF;   /* cartões que sobem do fundo */
+  --color-sutil: #FAF9F6;        /* faixas e estados de seleção */
+  --color-texto: #2D2926;        /* texto principal */
+  --color-suave: #7A7570;        /* texto secundário */
+  --color-borda: #E8E4DF;        /* filetes e contornos */
+  --color-ouro: #A89060;         /* acento, selos, seleção */
+  --color-ouro-forte: #967E50;   /* hover do acento */
+  --color-creme: #FDF6EC;        /* aviso quente do checkout */
+  --color-destaque: #C84B31;     /* grifo dos depoimentos */
+
+  /*
+   * O botão que faz avançar. No tema claro é o grafite; no escuro vira o
+   * ouro do hero — grafite sobre preto some, e o botão que some é o passo
+   * do funil que não acontece. `sobre-acao` é o texto que vai em cima dele
+   * e por isso inverte junto.
+   */
+  --color-acao: #2D2926;
+  --color-acao-hover: #3D3935;
+  --color-sobre-acao: #FFFFFF;
+  --color-sobre-ouro: #FFFFFF;   /* texto sobre selo dourado */
+}
+
+/*
+ * ====================================================================
+ * TEMA ESCURO — "Sacred Shield", o mesmo das telas 0 e 12.
+ *
+ * Liga por ?tema=escuro (ver src/main.tsx). Enquanto for proposta, o padrão
+ * continua sendo o claro: o funil que está no ar não muda de cor por conta
+ * de um arquivo de CSS.
+ *
+ * Duas famílias de variável são redefinidas aqui:
+ *
+ *  1. As da paleta acima, por papel.
+ *  2. As cores nomeadas do próprio Tailwind (emerald/red/amber), que o v4
+ *     também expõe como variáveis. É o que evita reescrever ~55 classes de
+ *     estado espalhadas pelo checkout: `bg-emerald-50` continua sendo
+ *     `bg-emerald-50` no código e vira verde-escuro sozinho. A escala é
+ *     invertida — o que era claro (50, 100) vira fundo escuro, o que era
+ *     escuro (700, 800) vira texto claro.
+ * ====================================================================
+ */
+html[data-tema='escuro'] {
+  --color-fundo: #131313;
+  --color-superficie: #1c1b1b;
+  --color-sutil: #232221;
+  --color-texto: #e5e2e1;
+  --color-suave: #b3ab9c;
+  --color-borda: #3d3930;
+  --color-ouro: #f2ca50;
+  --color-ouro-forte: #ffe088;
+  --color-creme: #241f14;
+  --color-destaque: #ff9a7a;
+
+  --color-acao: #f2ca50;
+  --color-acao-hover: #ffe088;
+  --color-sobre-acao: #241a00;
+  --color-sobre-ouro: #241a00;
+
+  /* Sucesso */
+  --color-emerald-50: #12271b;
+  --color-emerald-100: #17331f;
+  --color-emerald-200: #2f6b45;
+  --color-emerald-400: #6ee7b7;
+  --color-emerald-600: #34d399;
+  --color-emerald-700: #6ee7b7;
+  --color-emerald-800: #a7f3d0;
+  --color-emerald-900: #d1fae5;
+
+  /* Erro e alerta */
+  --color-red-50: #2a1214;
+  --color-red-200: #7f2a2a;
+  --color-red-700: #ffb4ab;
+  --color-red-800: #ffdad6;
+
+  /* Aviso quente / selos */
+  --color-amber-50: #241f14;
+  --color-amber-100: #332b18;
+  --color-amber-200: #6b5a2a;
+  --color-amber-300: #8a742f;
+  --color-amber-800: #f2ca50;
+  --color-amber-900: #ffe088;
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+  .font-cinzel {
+    font-family: 'Cinzel', serif;
+  }
+  .font-sans {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  .font-caslon {
+    font-family: 'Libre Caslon Text', Georgia, serif;
+  }
+  .font-work {
+    font-family: 'Work Sans', system-ui, sans-serif;
+  }
+  .accent-gradient-text {
+    background: linear-gradient(135deg, #2D2926 0%, #A89060 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .gold-gradient-bg {
+    background: linear-gradient(135deg, #A89060 0%, #967E50 100%);
+  }
+  .minimal-shadow {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  }
+  .minimal-shadow-lg {
+    box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Tema "Sacred Shield" — telas 0 (hero) e 12 (processamento).
+ *
+ * As duas são as únicas telas escuras do funil. Tudo aqui é fechado em si:
+ * nenhuma imagem de terceiro, nenhum CDN. O céu estrelado do processamento é
+ * gradiente puro de propósito — a arte original do layout vinha de uma URL
+ * temporária do gerador de design, que morre sozinha e deixaria a tela preta
+ * bem no minuto anterior à VSL.
+ * ------------------------------------------------------------------ */
+
+/* Botão dourado do hero: gradiente do ouro velho para o ouro vivo. */
+.btn-dourado {
+  background: linear-gradient(135deg, #d4af37, #f2ca50);
+}
+
+/* Auréola parada, atrás do botão. */
+.halo-dourado {
+  box-shadow: 0 0 40px 10px rgba(242, 202, 80, 0.15);
+}
+
+/* Auréola que respira, nos anéis do processamento. */
+.halo-pulsante {
+  box-shadow: 0 0 60px rgba(233, 195, 73, 0.3), inset 0 0 40px rgba(233, 195, 73, 0.2);
+  animation: haloPulsante 3s infinite alternate;
+}
+
+@keyframes haloPulsante {
+  0%   { box-shadow: 0 0 50px rgba(233, 195, 73, 0.2), inset 0 0 30px rgba(233, 195, 73, 0.1); }
+  100% { box-shadow: 0 0 80px rgba(233, 195, 73, 0.4), inset 0 0 50px rgba(233, 195, 73, 0.3); }
+}
+
+.girar-lento {
+  animation: girar 10s linear infinite;
+}
+
+@keyframes girar {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/*
+ * Entrada da tela de processamento: cada bloco sobe de baixo, em sequência.
+ *
+ * O curso é longo (56px) e a curva desacelera forte no fim
+ * (cubic-bezier(0.16, 1, 0.3, 1)); com os atrasos curtos do LoadingScreen os
+ * blocos se sobrepõem e o conjunto lê como UMA rolagem da tela, não como quatro
+ * elementos piscando um de cada vez. Era 20px com `ease-out`, e a 20px o
+ * movimento mal se percebia.
+ */
+.entrar-rolando {
+  animation: entrarRolando 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(56px);
+}
+
+@keyframes entrarRolando {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Céu profundo do processamento: nebulosa em três camadas de gradiente. */
+.fundo-mistico {
+  background:
+    radial-gradient(circle at 22% 18%, rgba(233, 195, 73, 0.10) 0%, rgba(19, 19, 19, 0) 42%),
+    radial-gradient(circle at 78% 72%, rgba(191, 197, 228, 0.09) 0%, rgba(19, 19, 19, 0) 46%),
+    radial-gradient(ellipse at 50% 42%, #232342 0%, #1a1a2e 38%, #131313 72%);
+}
+
+/*
+ * Poeira de estrelas. São pontos de 1px em gradiente radial, num ladrilho de
+ * 320px que se repete — sai mais barato que qualquer imagem e continua nítido
+ * em tela de retina, onde um PNG de estrelas fica borrado.
+ */
+.poeira-estelar {
+  background-image:
+    radial-gradient(1px 1px at 24px 38px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1px 1px at 96px 12px, rgba(242, 202, 80, 0.8), transparent),
+    radial-gradient(1px 1px at 152px 96px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1px 1px at 210px 44px, rgba(191, 197, 228, 0.8), transparent),
+    radial-gradient(1px 1px at 268px 128px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 58px 176px, rgba(242, 202, 80, 0.7), transparent),
+    radial-gradient(1px 1px at 188px 208px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 300px 244px, rgba(191, 197, 228, 0.7), transparent),
+    radial-gradient(1px 1px at 128px 288px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 244px 300px, rgba(242, 202, 80, 0.6), transparent);
+  background-size: 320px 320px;
+  background-repeat: repeat;
+}
+
+/* Custom smooth pulse animation */
+@keyframes divinePulse {
+  0%, 100% { opacity: 0.92; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.015); }
+}
+
+.animate-divine-pulse {
+  animation: divinePulse 4s ease-in-out infinite;
+}
+
+/*
+ * Pulso dos botões de compra.
+ *
+ * O anel é feito só com `box-shadow`, sem `transform`. O botão é um
+ * `motion.button` e o motion já escreve `transform` inline para o afundar do
+ * toque e o levantar do hover — uma animação CSS mexendo no mesmo transform
+ * brigaria com ele, e o resultado seria o botão travando ou pulando no clique,
+ * bem no instante da compra.
+ *
+ * 2,2 s por ciclo, com pausa: pulso rápido vira alarme e cansa em poucos
+ * segundos numa tela onde a pessoa precisa ler nome, e-mail e CPF.
+ */
+@keyframes pulsoDeCompra {
+  0%   { box-shadow: 0 0 0 0 rgba(39, 134, 71, 0.5); }
+  70%  { box-shadow: 0 0 0 12px rgba(39, 134, 71, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(39, 134, 71, 0); }
+}
+
+.pulso-de-compra {
+  animation: pulsoDeCompra 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/*
+ * Pulso do botão que abre o funil.
+ *
+ * Dourado em vez de verde: na primeira tela não existe compra ainda, e o verde
+ * é o sinal reservado para dinheiro nas telas de checkout. Aqui o anel só
+ * precisa dizer "é aqui que se toca" — 63% de quem abre o site sai sem chegar
+ * na pergunta 1, e o botão é o único alvo de toque da tela.
+ *
+ * 2,6 s, um pouco mais lento que o de compra: ali a pessoa está decidindo com o
+ * cartão na mão e o ritmo mais curto ajuda; aqui ela acabou de chegar e ainda
+ * está lendo a promessa. Pulso apressado na chegada lê como anúncio, não como
+ * convite.
+ *
+ * Só `box-shadow`, sem `transform`: o botão já usa `hover:scale` e
+ * `active:scale-95` do Tailwind, e uma animação mexendo no mesmo transform
+ * brigaria com eles — o botão travaria justamente no toque.
+ */
+@keyframes pulsoDeAbertura {
+  0%   { box-shadow: 0 0 40px 10px rgba(242, 202, 80, 0.15), 0 0 0 0 rgba(242, 202, 80, 0.55); }
+  70%  { box-shadow: 0 0 40px 10px rgba(242, 202, 80, 0.15), 0 0 0 14px rgba(242, 202, 80, 0); }
+  100% { box-shadow: 0 0 40px 10px rgba(242, 202, 80, 0.15), 0 0 0 0 rgba(242, 202, 80, 0); }
+}
+
+.pulso-de-abertura {
+  animation: pulsoDeAbertura 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/*
+ * Quem pediu menos movimento no sistema não recebe pulso nenhum.
+ *
+ * Não é detalhe de acessibilidade solta: parte deste público tem 50 anos ou
+ * mais, e sensibilidade a movimento repetitivo (tontura, enxaqueca) cresce com
+ * a idade. Um botão que pisca sem parar pode ser o motivo de a pessoa fechar a
+ * aba, e ela nunca vai saber explicar por quê.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .pulso-de-compra { animation: none; }
+  .pulso-de-abertura { animation: none; }
+  .animate-divine-pulse { animation: none; }
+
+  /*
+   * O mesmo motivo vale para as telas escuras. A auréola pulsante some; o giro
+   * dos anéis fica, porque ele é lento e é o que informa que a análise está
+   * acontecendo — sem ele a tela parece travada.
+   *
+   * O `subir-suave` precisa terminar no estado final, não ser só desligado:
+   * `animation: none` sozinho deixaria o texto parado em opacity 0, ou seja,
+   * a tela inteira em branco para quem pediu menos movimento.
+   */
+  .halo-pulsante { animation: none; }
+  .entrar-rolando {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * A cor de fundo vive no <body>, não numa classe do App.
+ *
+ * É o que pinta a área de overscroll — aquela faixa que aparece quando se
+ * puxa a página além do fim no celular. Com o fundo só no container, essa
+ * faixa vinha branca no tema escuro, e a tela inteira "piscava" branco a cada
+ * rolagem com o dedo.
+ */
+html,
+body {
+  background-color: var(--color-fundo);
+}
+
+/*
+ * No tema escuro o céu é do funil inteiro, não só da tela de processamento —
+ * é isso que costura as telas todas no mesmo ambiente. Fica no <body> e
+ * preso à janela (`fixed`), então a nebulosa não desliza junto com o
+ * conteúdo: a pessoa rola o texto por cima de um céu parado.
+ */
+html[data-tema='escuro'] body {
+  color-scheme: dark;
+  background-image:
+    radial-gradient(circle at 22% 12%, rgba(233, 195, 73, 0.08) 0%, rgba(19, 19, 19, 0) 40%),
+    radial-gradient(circle at 82% 68%, rgba(191, 197, 228, 0.07) 0%, rgba(19, 19, 19, 0) 44%),
+    radial-gradient(ellipse at 50% 38%, #1f1f3a 0%, #18182b 40%, #131313 74%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+
+/*
+ * Texto-guia dos campos do checkout, no tema escuro.
+ *
+ * A classe do formulário é `placeholder-suave/60`, e 60% de #b3ab9c sobre o
+ * campo escuro dá ~3:1 — abaixo do que este público consegue ler. E aqui o
+ * texto-guia NÃO é enfeite: é ele que diz o que vai em cada campo ("CPF de quem
+ * vai pagar"). Ilegível, o cliente decidido a comprar trava no formulário.
+ *
+ * A correção fica no tema escuro só. O funil claro que está no ar não muda de
+ * aparência por causa de uma proposta.
+ */
+html[data-tema='escuro'] input::placeholder,
+html[data-tema='escuro'] textarea::placeholder {
+  color: #a49b8c;
+  opacity: 1;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-fundo);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-borda);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ouro);
+}
+

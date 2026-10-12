@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obrigado! | Rezas Sagradas</title>
+<meta name="description" content="Pagamento confirmado. Aqui estão os seus acessos.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#FDFCFB">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #FDFCFB;
+    color: #2D2926;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.55;
+    padding: 32px 20px 56px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .folha { max-width: 480px; margin: 0 auto; }
+  .selo {
+    width: 72px; height: 72px; margin: 0 auto 20px;
+    border-radius: 50%; background: #2D2926; color: #A89060;
+    display: flex; align-items: center; justify-content: center;
+  }
+  h1 {
+    font-family: Cinzel, Georgia, serif;
+    font-size: 28px; line-height: 1.2; text-align: center; margin-bottom: 10px;
+  }
+  .sub { text-align: center; color: #7A7570; font-size: 15px; margin-bottom: 28px; }
+  .cartao {
+    background: #fff; border: 1px solid #E8E4DF; border-radius: 16px;
+    padding: 20px; margin-bottom: 14px;
+  }
+  .cartao h2 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .cartao p { font-size: 14px; color: #7A7570; margin-bottom: 14px; }
+  .botao {
+    display: block; width: 100%; padding: 14px 20px; border-radius: 999px;
+    background: #2D2926; color: #fff; text-align: center; font-weight: 600;
+    font-size: 15px; text-decoration: none; border: 0; cursor: pointer;
+  }
+  .botao:hover { background: #3D3935; }
+  .botao.ouro { background: #A89060; }
+  .botao.ouro:hover { background: #967E50; }
+  .aviso {
+    background: #FAF9F6; border: 1px solid #E8E4DF; border-radius: 14px;
+    padding: 16px; font-size: 13px; color: #7A7570; text-align: center;
+  }
+  .aviso strong { color: #2D2926; }
+  .secao-titulo {
+    font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    color: #A89060; margin: 26px 0 12px; text-align: center;
+  }
+  .rodape { margin-top: 32px; text-align: center; font-size: 12px; color: #A6A19B; }
+  .oculto { display: none; }
+  .girando { animation: girar 1s linear infinite; display: inline-block; }
+  @keyframes girar { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<main class="folha">
+
+  <div class="selo" aria-hidden="true">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 6 9 17l-5-5"/>
+    </svg>
+  </div>
+
+  <h1>Pagamento confirmado</h1>
+  <p class="sub">Que Deus e o Arcanjo Miguel abençoem sua caminhada. Sua Oração Sagrada já é sua.</p>
+
+  <!-- Acessos: preenchidos por JS quando houver pedido guardado neste navegador. -->
+  <div id="carregando" class="aviso">
+    <span class="girando">◠</span> Buscando os seus acessos...
+  </div>
+
+  <div id="acessos" class="oculto">
+    <p class="secao-titulo">Seus acessos</p>
+    <div id="listaAcessos"></div>
+  </div>
+
+  <div id="semAcessos" class="oculto">
+    <div class="aviso">
+      <strong>Seus acessos foram enviados por e-mail.</strong><br>
+      Se não encontrar, confira a caixa de spam ou chame a gente no WhatsApp.
+    </div>
+  </div>
+
+  <p class="rodape">© Rezas Sagradas · Oração do Arcanjo Miguel</p>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /*
+   * A página é estática de propósito: ela existe para ser um endereço de
+   * verdade que o Google Ads consegue contar como conversão. O funil é uma
+   * aplicação de página única e nunca troca de URL, então sem um endereço
+   * próprio não haveria o que medir.
+   *
+   * Os acessos aparecem aqui porque, saindo do checkout, o cliente perderia a
+   * tela que mostra o que ele comprou. Quem chega sem pedido guardado (colou o
+   * link, entrou de outro aparelho) vê o aviso de e-mail em vez de um erro.
+   */
+  var CHAVE_PEDIDO = 'rezas_sagradas.pedido';
+
+  function escapar(texto) {
+    return String(texto == null ? '' : texto).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function mostrar(id) { document.getElementById(id).classList.remove('oculto'); }
+  function esconder(id) { document.getElementById(id).classList.add('oculto'); }
+
+  function semAcessos() {
+    esconder('carregando');
+    mostrar('semAcessos');
+  }
+
+  function pedidoGuardado() {
+    try {
+      var bruto = localStorage.getItem(CHAVE_PEDIDO);
+      if (!bruto) return null;
+      var dados = JSON.parse(bruto);
+      return dados && typeof dados.id === 'string' && dados.id ? dados.id : null;
+    } catch (e) {
+      // Aba privada ou storage bloqueado: seguimos para o aviso de e-mail.
+      return null;
+    }
+  }
+
+  function cartaoDeAcesso(item) {
+    var temLink = item.url && /^https?:\/\//i.test(item.url);
+    return '<div class="cartao">' +
+      '<h2>' + escapar(item.title) + '</h2>' +
+      '<p>' + escapar(item.description || '') + '</p>' +
+      (temLink
+        ? '<a class="botao ouro" href="' + escapar(item.url) + '" target="_blank" rel="noopener noreferrer">Acessar agora</a>'
+        : '<div class="aviso">Entrega confirmada. O envio chega no seu e-mail.</div>') +
+    '</div>';
+  }
+
+  /* ------------------------------------------------- Pixel do Meta -- */
+
+  /*
+   * AQUI FICAVA O PIXEL DO META, removido em 21/08/2026.
+   *
+   * A página carregava a biblioteca de eventos do Meta, disparava a visita e,
+   * quando o pedido estava pago, uma compra com o `eventID` que o servidor
+   * havia usado — o par de deduplicação da API de Conversões.
+   *
+   * O NOME DO ARQUIVO E O DOMÍNIO NÃO ESTÃO ESCRITOS AQUI de propósito. Este
+   * HTML é servido ao navegador, comentário incluído: deixar os literais no ar
+   * faria a auditoria "nenhum vestígio no bundle" bater num comentário e nunca
+   * poder ser fechada por quem não conhece o histórico. Ver o commit desta
+   * remoção para os nomes exatos.
+   *
+   * Saiu junto com todo o rastreamento de terceiros do projeto. A conversão
+   * agora é registrada SÓ no nosso banco, no momento em que o gateway confirma
+   * o pagamento, e sai daqui por exportação (`/admin/conversoes.csv`).
+   *
+   * O QUE NÃO MUDOU nesta página: a leitura do pedido guardado, a liberação dos
+   * acessos e a conversão do Google Ads. A /obg existe para ser o endereço de
+   * conversão da campanha do Google, e essa função continua intacta.
+   */
+
+  var id = pedidoGuardado();
+  if (!id) { semAcessos(); return; }
+
+  fetch('/api/orders/' + encodeURIComponent(id) + '/access', { headers: { Accept: 'application/json' } })
+    .then(function (r) { return r.json().catch(function () { return {}; }); })
+    .then(function (corpo) {
+      var conteudos = corpo && corpo.success && corpo.data ? corpo.data.contents : null;
+      if (!conteudos || !conteudos.length) { semAcessos(); return; }
+      document.getElementById('listaAcessos').innerHTML = conteudos.map(cartaoDeAcesso).join('');
+      esconder('carregando');
+      mostrar('acessos');
+    })
+    .catch(function () { semAcessos(); });
+})();
+</script>
+</body>
+</html>
