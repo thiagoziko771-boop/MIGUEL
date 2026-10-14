@@ -21,9 +21,16 @@ for (const message of fatalErrors) logger.error(`Configuração inválida: ${mes
  * produto. Preferimos recusar de forma visível a aceitar dinheiro e perder o
  * pedido.
  */
-const storageMisconfigured = !config.databaseUrl;
-if (storageMisconfigured) {
-  logger.error('DATABASE_URL ausente: as rotas de pagamento ficarão indisponíveis nesta implantação.');
+/*
+ * Até 14/10/2026 a falta de banco fechava a API inteira com 503. O dono pediu
+ * o PIX funcionando sem banco, e o risco descrito acima passou a ser coberto
+ * pelo selo: o pedido viaja cifrado no navegador e qualquer instância o
+ * reconstrói (config.selarPedidos, server/selo.ts). O que continua sem banco:
+ * painel /admin sem histórico, e quem paga depois de fechar a página não tem
+ * a tela de volta sozinha.
+ */
+if (!config.databaseUrl) {
+  logger.warn('DATABASE_URL ausente: pedidos em arquivo temporário, mantidos entre instâncias pelo selo.');
 }
 
 const app = createApp();
@@ -112,16 +119,6 @@ function refuse(res: ServerResponse, status: number, error: string, message: str
 }
 
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  if (storageMisconfigured) {
-    refuse(
-      res,
-      503,
-      'STORAGE_NOT_CONFIGURED',
-      'O checkout está temporariamente indisponível. Nenhuma cobrança foi gerada.',
-    );
-    return;
-  }
-
   try {
     await prepararArmazenamento();
   } catch {

@@ -9,6 +9,7 @@ import { CODIGO_COBRANCA_SUMIU, PixGatewayError, createPayment, fetchPaymentStat
 import { nomeDoRecebedorPix } from './brcode.js';
 import { avisarVendaAprovada, avisarVendaPendente } from './discord.js';
 import { registrarConversao } from './mensuracao.js';
+import { selarPedido } from './selo.js';
 import { enviarPedidoParaUtmify } from './utmify.js';
 import type { Atribuicao } from './atribuicao.js';
 import {
@@ -58,6 +59,8 @@ export interface PublicOrder {
    * otimização mais do que não contar.
    */
   purchaseEventId: string | null;
+  /** O pedido cifrado, para o navegador devolver. Só sem banco na Vercel. */
+  selo?: string;
 }
 
 /*
@@ -118,6 +121,8 @@ export function toPublicOrder(order: Order): PublicOrder {
     },
     createdAt: order.createdAt,
     purchaseEventId: order.status === 'completed' ? (order.purchaseEventId ?? null) : null,
+    // Só existe sem banco na Vercel: o navegador guarda e devolve. Ver server/selo.ts.
+    ...(config.selarPedidos ? { selo: selarPedido(order) } : {}),
   };
 }
 

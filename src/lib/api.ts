@@ -47,6 +47,8 @@ export interface Order {
    * não dispara nada.
    */
   purchaseEventId: string | null;
+  /** O pedido cifrado pelo servidor. Só vem quando o site roda sem banco. */
+  selo?: string;
 }
 
 export interface DeliverableContent {
@@ -84,7 +86,40 @@ export class ApiError extends Error {
   }
 }
 
+/*
+ * OS PEDIDOS SELADOS.
+ *
+ * Quando o site roda sem banco, o servidor devolve cada pedido também cifrado
+ * (`selo`). Guardamos aqui e mandamos de volta em toda chamada: é o que deixa
+ * a instância seguinte do servidor reconhecer o PIX que outra gerou. Com banco
+ * o campo nunca vem, e nada disto é enviado. Ver server/selo.ts.
+ *
+ * A mesma chave é lida pela /obg (public/obg.html).
+ */
+const CHAVE_DOS_SELOS = 'rezas_sagradas.selos';
+const MAXIMO_DE_SELOS = 4;
+
+function lerSelos(): [string, string][] {
+  try {
+    const salvos = JSON.parse(window.localStorage.getItem(CHAVE_DOS_SELOS) ?? '[]');
+    return Array.isArray(salvos) ? salvos.filter((par) => Array.isArray(par) && par.length === 2) : [];
+  } catch {
+    return [];
+  }
+}
+
+function guardarSelo(id: string, selo: string): void {
+  try {
+    const outros = lerSelos().filter(([existente]) => existente !== id);
+    const selos = [...outros, [id, selo]].slice(-MAXIMO_DE_SELOS);
+    window.localStorage.setItem(CHAVE_DOS_SELOS, JSON.stringify(selos));
+  } catch {
+    // Sem storage o selo vale só para esta carga da página.
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const selos = lerSelos().map(([, selo]) => selo).join(',');
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
@@ -92,6 +127,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       headers: {
         Accept: 'application/json',
         ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(selos ? { 'X-Pedido-Selos': selos } : {}),
         ...init?.headers,
       },
     });
@@ -120,6 +156,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       field: body?.field,
       status: response.status,
     });
+  }
+
+  if (typeof body.data?.selo === 'string' && typeof body.data?.id === 'string') {
+    guardarSelo(body.data.id, body.data.selo);
   }
 
   return body.data as T;

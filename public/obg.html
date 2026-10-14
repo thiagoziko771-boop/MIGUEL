@@ -172,7 +172,15 @@
   var id = pedidoGuardado();
   if (!id) { semAcessos(); return; }
 
-  fetch('/api/orders/' + encodeURIComponent(id) + '/access', { headers: { Accept: 'application/json' } })
+  // Sem banco, o servidor precisa dos pedidos selados para lembrar desta compra.
+  // A chave é a mesma de src/lib/api.ts.
+  var cabecalhos = { Accept: 'application/json' };
+  try {
+    var selos = JSON.parse(localStorage.getItem('rezas_sagradas.selos') || '[]');
+    if (selos.length) cabecalhos['X-Pedido-Selos'] = selos.map(function (par) { return par[1]; }).join(',');
+  } catch (e) { /* sem storage: segue sem selo */ }
+
+  fetch('/api/orders/' + encodeURIComponent(id) + '/access', { headers: cabecalhos })
     .then(function (r) { return r.json().catch(function () { return {}; }); })
     .then(function (corpo) {
       var conteudos = corpo && corpo.success && corpo.data ? corpo.data.contents : null;

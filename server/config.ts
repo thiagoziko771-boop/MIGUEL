@@ -1,3 +1,4 @@
+import os from 'node:os';
 import path from 'node:path';
 import { config as loadEnvFile } from 'dotenv';
 
@@ -48,7 +49,15 @@ if (mode !== 'live' && mode !== 'mock') {
 const PROVEDORES_DE_PIX = ['pixgo', 'syncpay', 'zuckpay'] as const;
 type ProvedorDePix = (typeof PROVEDORES_DE_PIX)[number];
 
-const pixProvider = ((process.env.PIX_PROVIDER ?? 'pixgo').trim().toLowerCase() || 'pixgo') as ProvedorDePix;
+/*
+ * Na Vercel o gateway em uso é a ZuckPay, então ela é o padrão lá: falta uma
+ * variável a menos para cadastrar. As credenciais NUNCA ficam no código — o
+ * repositório é público. Fora da Vercel o padrão continua `pixgo`, porque as
+ * baterias de teste dependem dele.
+ */
+const naVercel = Boolean(process.env.VERCEL);
+const provedorPadrao = naVercel ? 'zuckpay' : 'pixgo';
+const pixProvider = ((process.env.PIX_PROVIDER ?? provedorPadrao).trim().toLowerCase() || provedorPadrao) as ProvedorDePix;
 if (!(PROVEDORES_DE_PIX as readonly string[]).includes(pixProvider)) {
   fatalErrors.push(
     `PIX_PROVIDER deve ser ${PROVEDORES_DE_PIX.map((p) => `"${p}"`).join(', ')} (valor recebido: "${pixProvider}").`,
@@ -438,7 +447,28 @@ export const config = {
     maxOrdersPerWindow: readInt(process.env.RATE_LIMIT_MAX_ORDERS, 12),
   },
 
-  dataDir: path.resolve(process.cwd(), (process.env.DATA_DIR ?? '.data').trim()),
+  /*
+   * Na Vercel sem banco, a única pasta gravável é a temporária. Ela some quando
+   * a instância é reciclada — quem segura o pedido entre instâncias é o selo
+   * (ver `selarPedidos`).
+   */
+  dataDir: path.resolve(
+    process.cwd(),
+    (process.env.DATA_DIR ?? (naVercel && !databaseUrl ? path.join(os.tmpdir(), 'pedidos') : '.data')).trim(),
+  ),
+
+  /*
+   * O PEDIDO VIAJA SELADO NO NAVEGADOR quando não há banco na Vercel.
+   *
+   * Sem banco, cada instância só conhece os pedidos que ela mesma criou, e a
+   * consulta seguinte do cliente pode cair em outra: o PIX seria gerado e,
+   * segundos depois, a tela diria que o pedido não existe. Aqui cada resposta
+   * leva o pedido inteiro cifrado (AES-256-GCM), o navegador devolve no header
+   * `X-Pedido-Selos`, e a instância que não conhecia o pedido passa a conhecer.
+   * Ver server/selo.ts.
+   */
+  selarPedidos: !databaseUrl && (naVercel || readBool(process.env.SELAR_PEDIDOS, false)),
+  seloChave: painelChaveMestra || zuckpayClientSecret || 'selo-sem-chave-configurada',
   serveStatic: readBool(process.env.SERVE_STATIC, process.env.NODE_ENV === 'production'),
   trustProxy: readBool(process.env.TRUST_PROXY, false),
 } as const;

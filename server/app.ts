@@ -12,6 +12,7 @@ import { recuperacaoRouter } from './routes/recuperacaoOferta.js';
 import { escolherRouter } from './routes/escolherOferta.js';
 import { trackRouter } from './routes/track.js';
 import { CAMINHOS_DO_CALLBACK, webhookRouter } from './routes/webhook.js';
+import { reidratarPedidos } from './selo.js';
 import { getStatusPollUsage, storeKind } from './store/index.js';
 import { ValidationError } from './validation.js';
 
@@ -57,6 +58,16 @@ export function createApp(): Express {
     express.raw({ type: '*/*', limit: '256kb' }),
   );
   app.use(express.json({ limit: '64kb' }));
+
+  // Sem banco na Vercel: devolve a esta instância os pedidos que o navegador
+  // trouxe selados. Falhar aqui nunca derruba a requisição. Ver server/selo.ts.
+  if (config.selarPedidos) {
+    app.use('/api', (req: Request, _res: Response, next: NextFunction) => {
+      reidratarPedidos(req.header('X-Pedido-Selos'))
+        .catch((erro: unknown) => logger.warn('Selo de pedido ignorado', { erro: (erro as Error)?.message }))
+        .finally(() => next());
+    });
+  }
 
   app.get('/api/health', async (_req: Request, res: Response) => {
     res.json({
