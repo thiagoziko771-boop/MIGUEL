@@ -122,6 +122,53 @@ export default function App() {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, QuizOption>>({});
 
   /*
+   * A TROCA DE TELA NÃO PODE DEPENDER DE A ANIMAÇÃO TERMINAR.
+   *
+   * O `AnimatePresence mode="wait"` só monta a tela nova depois que a saída da
+   * antiga acaba, e a saída é desenhada quadro a quadro pelo navegador. Quando
+   * os quadros não chegam, a saída nunca acaba: o estado já está na etapa
+   * seguinte, mas a tela antiga fica parada na frente e o "Continuar" parece
+   * morto. Reproduzido em 13/10/2026 com `requestAnimationFrame` congelado — a
+   * tela do áudio não saía do lugar, e é o mesmo sintoma que o dono relatou.
+   *
+   * A sentinela abaixo confere, 900 ms depois de cada mudança de etapa (a saída
+   * mais longa dura 400 ms), se o MESMO nó da tela antiga continua lá. Se
+   * continua, a animação travou: o palco é remontado e a tela certa aparece
+   * pronta, sem entrada animada — `initial={false}`, porque uma entrada que
+   * também depende de quadro deixaria a tela nova invisível.
+   *
+   * Só vigia `funnelStepIndex`. As sub-telas da etapa 0 (cadastro, pedido de
+   * oração) têm formulário digitado, e remontar ali por engano apagaria o que a
+   * pessoa escreveu.
+   */
+  const palcoRef = useRef<HTMLDivElement | null>(null);
+  const etapaVigiada = useRef(funnelStepIndex);
+  const [remontagensDoPalco, setRemontagensDoPalco] = useState(0);
+
+  useEffect(() => {
+    if (etapaVigiada.current === funnelStepIndex) return;
+    etapaVigiada.current = funnelStepIndex;
+
+    const telaAntiga = palcoRef.current?.firstElementChild ?? null;
+    if (!telaAntiga) return;
+
+    const sentinela = setTimeout(() => {
+      if (palcoRef.current?.firstElementChild === telaAntiga) {
+        setRemontagensDoPalco((n) => n + 1);
+      }
+    }, 900);
+    return () => clearTimeout(sentinela);
+  }, [funnelStepIndex]);
+
+  /*
+   * Um toque por pergunta. A resposta avança a etapa 280 ms depois, e nesse
+   * intervalo a pergunta ainda está na tela: um segundo toque agendava outro
+   * avanço e a pessoa pulava a pergunta seguinte sem ver — ou a tela dos
+   * depoimentos, que é a prova social antes da oferta.
+   */
+  const avancoAgendado = useRef(false);
+
+  /*
    * FLUXO CURTO (experimento de 14/08/2026, só para a capa "dinheiro").
    *
    * Quem chega pelo anúncio do dinheiro não responde o quiz: capa -> nome e
@@ -379,6 +426,9 @@ export default function App() {
 
   // Helper to handle quiz option selection
   const handleSelectOption = (questionId: string, option: QuizOption) => {
+    if (avancoAgendado.current) return;
+    avancoAgendado.current = true;
+
     setSelectedAnswers((prev) => ({ ...prev, [questionId]: option }));
 
     /*
@@ -405,6 +455,7 @@ export default function App() {
 
     // Smooth transition to next step after brief tactile feedback
     setTimeout(() => {
+      avancoAgendado.current = false;
       setFunnelStepIndex((prev) => prev + 1);
     }, 280);
   };
@@ -505,8 +556,15 @@ export default function App() {
             menos errado que um "carregando" que aparece e some, que faz a pessoa
             achar que travou e tocar de novo.
           */}
+          {/* `contents`: o invólucro existe só para a sentinela achar a tela
+              atual; no layout é como se não estivesse aqui. */}
+          <div ref={palcoRef} className="contents">
           <Suspense fallback={null}>
-          <AnimatePresence mode="wait">
+          <AnimatePresence
+            key={remontagensDoPalco}
+            mode="wait"
+            initial={remontagensDoPalco === 0 ? undefined : false}
+          >
             {/* SCREEN 0: HERO WELCOME SCREEN */}
             {funnelStepIndex === 0 && !mostrandoCadastro && !mostrandoPedido && !mostrandoTransicao && (
               <m.div
@@ -730,6 +788,7 @@ export default function App() {
             )}
           </AnimatePresence>
           </Suspense>
+          </div>
         </div>
       </main>
 
