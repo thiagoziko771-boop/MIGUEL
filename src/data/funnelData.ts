@@ -459,7 +459,7 @@ export const OFFER_DATA = {
    * costuma reduzir quem chega no checkout e aumentar a proporção dos que
    * compram; soltar antes faz o contrário.
    */
-  segundosAteOCta: 242,
+  segundosAteOCta: 240,
   badgeTitle: "Parabéns!",
   badgeSubtitle: "Entre milhares... você foi um dos selecionados.",
   headline: "A oração secreta do Arcanjo Miguel foi liberada para você.",
